@@ -136,11 +136,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     uid = uid,
                     name = name,
                     email = email,
-                    profileImageUri = ""
+                    profileImageUrl = ""
                 )
 
                 viewModelScope.launch {
-                    userRepository.saveUserToRoom(user)
+                    userRepository.saveUser(user)
                     _loading.postValue(false)
                     _registerSuccess.postValue(true)
                 }

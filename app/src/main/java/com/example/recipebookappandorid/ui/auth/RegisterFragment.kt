@@ -68,7 +68,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
         viewModel.registerSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 Toast.makeText(requireContext(), "Registration successful", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(R.id.loginFragment)
+                findNavController().navigate(R.id.feedFragment)
             }
         }
     }

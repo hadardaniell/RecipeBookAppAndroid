@@ -9,24 +9,24 @@ class UserRepository(context: Context) {
 
     private val userDao = AppDatabase.getInstance(context).userDao()
 
-    suspend fun saveUserToRoom(user: User) {
+    suspend fun saveUser(user: User) {
         val entity = UserEntity(
             uid = user.uid,
             name = user.name,
             email = user.email,
-            profileImageUri = user.profileImageUri
+            profileImageUrl = user.profileImageUrl
         )
         userDao.insertUser(entity)
     }
 
-    suspend fun getUserFromRoom(uid: String): User? {
-        val entity = userDao.getUserById(uid) ?: return null
+    suspend fun getUser(uid: String): User? {
+        val entity = userDao.getUser(uid) ?: return null
 
         return User(
             uid = entity.uid,
             name = entity.name,
             email = entity.email,
-            profileImageUri = entity.profileImageUri
+            profileImageUrl = entity.profileImageUrl
         )
     }
 

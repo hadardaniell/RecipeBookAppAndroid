@@ -20,6 +20,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFeedBinding.bind(view)
 
+        binding.btnProfile.setOnClickListener {
+            findNavController().navigate(R.id.profileFragment)
+        }
+
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
             findNavController().navigate(R.id.loginFragment)
