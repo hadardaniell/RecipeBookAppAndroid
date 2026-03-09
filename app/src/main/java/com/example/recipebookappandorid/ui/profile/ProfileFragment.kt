@@ -23,12 +23,20 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         _binding = FragmentProfileBinding.bind(view)
 
+        binding.btnEditProfile.setOnClickListener {
+            findNavController().navigate(R.id.editProfileFragment)
+        }
+
         binding.btnLogout.setOnClickListener {
             authViewModel.logout()
             findNavController().navigate(R.id.loginFragment)
         }
 
         observeViewModel()
+    }
+
+    override fun onResume() {
+        super.onResume()
         profileViewModel.loadCurrentUser()
     }
 
