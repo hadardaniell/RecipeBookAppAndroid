@@ -1,6 +1,7 @@
 package com.example.recipebookappandorid.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 class AuthRepository {
 
@@ -24,12 +25,12 @@ class AuthRepository {
     fun register(
         email: String,
         password: String,
-        onSuccess: () -> Unit,
+        onSuccess: (FirebaseUser?) -> Unit,
         onError: (String) -> Unit
     ) {
         auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener {
-                onSuccess()
+            .addOnSuccessListener { result ->
+                onSuccess(result.user)
             }
             .addOnFailureListener { exception ->
                 onError(exception.message ?: "Register failed")

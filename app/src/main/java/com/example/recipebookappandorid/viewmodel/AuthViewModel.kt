@@ -1,14 +1,20 @@
 package com.example.recipebookappandorid.viewmodel
 
+import android.app.Application
 import android.util.Patterns
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.recipebookappandorid.model.User
 import com.example.recipebookappandorid.repository.AuthRepository
+import com.example.recipebookappandorid.repository.UserRepository
+import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = AuthRepository()
+    private val authRepository = AuthRepository()
+    private val userRepository = UserRepository(application)
 
     private val _loading = MutableLiveData(false)
     val loading: LiveData<Boolean> = _loading
@@ -44,7 +50,7 @@ class AuthViewModel : ViewModel() {
 
         var isValid = true
 
-        if (email.isEmpty()) {
+        if (email.isBlank()) {
             _emailError.value = "Email is required"
             isValid = false
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -52,7 +58,7 @@ class AuthViewModel : ViewModel() {
             isValid = false
         }
 
-        if (password.isEmpty()) {
+        if (password.isBlank()) {
             _passwordError.value = "Password is required"
             isValid = false
         } else if (password.length < 6) {
@@ -64,7 +70,7 @@ class AuthViewModel : ViewModel() {
 
         _loading.value = true
 
-        repository.login(
+        authRepository.login(
             email = email,
             password = password,
             onSuccess = {
@@ -120,12 +126,24 @@ class AuthViewModel : ViewModel() {
 
         _loading.value = true
 
-        repository.register(
+        authRepository.register(
             email = email,
             password = password,
-            onSuccess = {
-                _loading.postValue(false)
-                _registerSuccess.postValue(true)
+            onSuccess = { firebaseUser ->
+                val uid = firebaseUser?.uid.orEmpty()
+
+                val user = User(
+                    uid = uid,
+                    name = name,
+                    email = email,
+                    profileImageUri = ""
+                )
+
+                viewModelScope.launch {
+                    userRepository.saveUserToRoom(user)
+                    _loading.postValue(false)
+                    _registerSuccess.postValue(true)
+                }
             },
             onError = { errorMessage ->
                 _loading.postValue(false)
@@ -135,6 +153,10 @@ class AuthViewModel : ViewModel() {
     }
 
     fun logout() {
-        repository.logout()
+        authRepository.logout()
+
+        viewModelScope.launch {
+            userRepository.clearUsers()
+        }
     }
 }
