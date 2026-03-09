@@ -30,6 +30,16 @@ class UserRepository(context: Context) {
         )
     }
 
+    suspend fun updateUser(user: User) {
+        val entity = UserEntity(
+            uid = user.uid,
+            name = user.name,
+            email = user.email,
+            profileImageUrl = user.profileImageUrl
+        )
+        userDao.updateUser(entity)
+    }
+
     suspend fun clearUsers() {
         userDao.clearUsers()
     }

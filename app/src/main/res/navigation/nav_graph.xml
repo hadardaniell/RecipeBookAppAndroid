@@ -39,4 +39,9 @@
         android:name="com.example.recipebookappandorid.ui.profile.ProfileFragment"
         android:label="Profile" />
 
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.recipebookappandorid.ui.profile.EditProfileFragment"
+        android:label="Edit Profile" />
+
 </navigation>
