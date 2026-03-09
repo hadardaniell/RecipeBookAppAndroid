@@ -1,0 +1,136 @@
+package com.example.recipebookappandorid.viewmodel
+
+import android.util.Patterns
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.example.recipebookappandorid.repository.AuthRepository
+
+class AuthViewModel : ViewModel() {
+
+    private val repository = AuthRepository()
+
+    private val _loading = MutableLiveData(false)
+    val loading: LiveData<Boolean> = _loading
+
+    private val _emailError = MutableLiveData<String?>()
+    val emailError: LiveData<String?> = _emailError
+
+    private val _passwordError = MutableLiveData<String?>()
+    val passwordError: LiveData<String?> = _passwordError
+
+    private val _nameError = MutableLiveData<String?>()
+    val nameError: LiveData<String?> = _nameError
+
+    private val _confirmPasswordError = MutableLiveData<String?>()
+    val confirmPasswordError: LiveData<String?> = _confirmPasswordError
+
+    private val _loginError = MutableLiveData<String?>()
+    val loginError: LiveData<String?> = _loginError
+
+    private val _loginSuccess = MutableLiveData<Boolean>()
+    val loginSuccess: LiveData<Boolean> = _loginSuccess
+
+    private val _registerError = MutableLiveData<String?>()
+    val registerError: LiveData<String?> = _registerError
+
+    private val _registerSuccess = MutableLiveData<Boolean>()
+    val registerSuccess: LiveData<Boolean> = _registerSuccess
+
+    fun login(email: String, password: String) {
+        _emailError.value = null
+        _passwordError.value = null
+        _loginError.value = null
+
+        var isValid = true
+
+        if (email.isEmpty()) {
+            _emailError.value = "Email is required"
+            isValid = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _emailError.value = "Invalid email"
+            isValid = false
+        }
+
+        if (password.isEmpty()) {
+            _passwordError.value = "Password is required"
+            isValid = false
+        } else if (password.length < 6) {
+            _passwordError.value = "Password must be at least 6 characters"
+            isValid = false
+        }
+
+        if (!isValid) return
+
+        _loading.value = true
+
+        repository.login(
+            email = email,
+            password = password,
+            onSuccess = {
+                _loading.postValue(false)
+                _loginSuccess.postValue(true)
+            },
+            onError = { errorMessage ->
+                _loading.postValue(false)
+                _loginError.postValue(errorMessage)
+            }
+        )
+    }
+
+    fun register(name: String, email: String, password: String, confirmPassword: String) {
+        _nameError.value = null
+        _emailError.value = null
+        _passwordError.value = null
+        _confirmPasswordError.value = null
+        _registerError.value = null
+
+        var isValid = true
+
+        if (name.isBlank()) {
+            _nameError.value = "Name is required"
+            isValid = false
+        }
+
+        if (email.isBlank()) {
+            _emailError.value = "Email is required"
+            isValid = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _emailError.value = "Invalid email"
+            isValid = false
+        }
+
+        if (password.isBlank()) {
+            _passwordError.value = "Password is required"
+            isValid = false
+        } else if (password.length < 6) {
+            _passwordError.value = "Password must be at least 6 characters"
+            isValid = false
+        }
+
+        if (confirmPassword.isBlank()) {
+            _confirmPasswordError.value = "Please confirm password"
+            isValid = false
+        } else if (password != confirmPassword) {
+            _confirmPasswordError.value = "Passwords do not match"
+            isValid = false
+        }
+
+        if (!isValid) return
+
+        _loading.value = true
+
+        repository.register(
+            email = email,
+            password = password,
+            onSuccess = {
+                _loading.postValue(false)
+                _registerSuccess.postValue(true)
+            },
+            onError = { errorMessage ->
+                _loading.postValue(false)
+                _registerError.postValue(errorMessage)
+            }
+        )
+    }
+}
