@@ -133,4 +133,8 @@ class AuthViewModel : ViewModel() {
             }
         )
     }
+
+    fun logout() {
+        repository.logout()
+    }
 }
