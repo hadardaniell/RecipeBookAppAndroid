@@ -12,16 +12,14 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val user = FirebaseAuth.getInstance().currentUser
-
         view.postDelayed({
+            val user = FirebaseAuth.getInstance().currentUser
 
             if (user != null) {
-                findNavController().navigate(R.id.loginFragment) //temp navigating to login - TODO: change to feed
+                findNavController().navigate(R.id.feedFragment)
             } else {
                 findNavController().navigate(R.id.loginFragment)
             }
-
         }, 1000)
     }
 }
