@@ -4,17 +4,20 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.recipebookappandorid.data.local.dao.RecipeDao
 import com.example.recipebookappandorid.data.local.dao.UserDao
+import com.example.recipebookappandorid.data.local.entity.RecipeEntity
 import com.example.recipebookappandorid.data.local.entity.UserEntity
 
 @Database(
-    entities = [UserEntity::class],
-    version = 1,
+    entities = [UserEntity::class, RecipeEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
+    abstract fun recipeDao(): RecipeDao
 
     companion object {
         @Volatile

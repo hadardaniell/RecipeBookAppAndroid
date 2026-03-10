@@ -57,7 +57,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         viewModel.loginSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 Toast.makeText(requireContext(), "Login successful", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(R.id.feedFragment)
+                findNavController().navigate(R.id.mainContainerFragment)
             }
         }
     }

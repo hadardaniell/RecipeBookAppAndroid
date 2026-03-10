@@ -16,7 +16,7 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
             val user = FirebaseAuth.getInstance().currentUser
 
             if (user != null) {
-                findNavController().navigate(R.id.feedFragment)
+                findNavController().navigate(R.id.mainContainerFragment)
             } else {
                 findNavController().navigate(R.id.loginFragment)
             }
