@@ -44,4 +44,14 @@
         android:name="com.example.recipebookappandorid.ui.profile.EditProfileFragment"
         android:label="Edit Profile" />
 
+    <fragment
+        android:id="@+id/addRecipeFragment"
+        android:name="com.example.recipebookappandorid.ui.recipes.AddRecipeFragment"
+        android:label="Add Recipe" />
+
+    <fragment
+        android:id="@+id/mainContainerFragment"
+        android:name="com.example.recipebookappandorid.ui.main.MainContainerFragment"
+        android:label="Main Container" />
+
 </navigation>
