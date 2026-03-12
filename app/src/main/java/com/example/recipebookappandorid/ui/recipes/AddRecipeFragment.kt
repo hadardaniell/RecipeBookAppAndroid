@@ -9,6 +9,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentAddRecipeBinding
 import com.example.recipebookappandorid.viewmodel.RecipeViewModel
+import android.widget.ArrayAdapter
 
 class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
 
@@ -17,9 +18,52 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
 
     private val viewModel: RecipeViewModel by viewModels()
 
+    private fun setupDropdowns() {
+        val prepTimes = listOf(
+            "10 min",
+            "15 min",
+            "20 min",
+            "30 min",
+            "45 min",
+            "60 min+"
+        )
+
+        val difficulties = listOf(
+            "Easy",
+            "Medium",
+            "Hard"
+        )
+
+        val categories = listOf(
+            "Breakfast",
+            "Lunch",
+            "Dinner",
+            "Dessert",
+            "Salad",
+            "Soup",
+            "Pasta",
+            "Main Dish",
+            "Snack"
+        )
+
+        binding.etPrepTime.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, prepTimes)
+        )
+
+        binding.etDifficulty.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, difficulties)
+        )
+
+        binding.etCategory.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, categories)
+        )
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddRecipeBinding.bind(view)
+
+        setupDropdowns()
 
         binding.btnSaveRecipe.setOnClickListener {
             val title = binding.etTitle.text.toString().trim()
