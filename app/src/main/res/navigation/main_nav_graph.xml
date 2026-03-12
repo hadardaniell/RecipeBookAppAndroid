@@ -7,7 +7,12 @@
     <fragment
         android:id="@+id/feedFragment"
         android:name="com.example.recipebookappandorid.ui.feed.FeedFragment"
-        android:label="Feed" />
+        android:label="Feed">
+
+        <action
+            android:id="@+id/action_feedFragment_to_recipeDetailsFragment"
+            app:destination="@id/recipeDetailsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/addRecipeFragment"
@@ -28,5 +33,36 @@
         android:id="@+id/editProfileFragment"
         android:name="com.example.recipebookappandorid.ui.profile.EditProfileFragment"
         android:label="Edit Profile" />
+
+    <fragment
+        android:id="@+id/recipeDetailsFragment"
+        android:name="com.example.recipebookappandorid.ui.recipe.RecipeDetailsFragment"
+        android:label="Recipe Details">
+
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="authorName"
+            app:argType="string" />
+        <argument
+            android:name="prepTime"
+            app:argType="string" />
+        <argument
+            android:name="difficulty"
+            app:argType="string" />
+        <argument
+            android:name="category"
+            app:argType="string" />
+        <argument
+            android:name="ingredients"
+            app:argType="string" />
+        <argument
+            android:name="steps"
+            app:argType="string" />
+        <argument
+            android:name="notes"
+            app:argType="string" />
+    </fragment>
 
 </navigation>
