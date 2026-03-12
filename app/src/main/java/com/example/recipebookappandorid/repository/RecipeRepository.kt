@@ -1,6 +1,8 @@
 package com.example.recipebookappandorid.repository
 
 import android.content.Context
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.map
 import com.example.recipebookappandorid.data.local.AppDatabase
 import com.example.recipebookappandorid.data.local.entity.RecipeEntity
 import com.example.recipebookappandorid.model.Recipe
@@ -13,8 +15,10 @@ class RecipeRepository(context: Context) {
         recipeDao.insertRecipe(recipe.toEntity())
     }
 
-    suspend fun getAllRecipes(): List<Recipe> {
-        return recipeDao.getAllRecipes().map { it.toModel() }
+    fun getAllRecipes(): LiveData<List<Recipe>> {
+        return recipeDao.getAllRecipes().map { list ->
+            list.map { it.toModel() }
+        }
     }
 
     suspend fun getMyRecipes(authorId: String): List<Recipe> {
@@ -39,6 +43,12 @@ class RecipeRepository(context: Context) {
             title = title,
             description = description,
             imageUrl = imageUrl,
+            prepTime = prepTime,
+            difficulty = difficulty,
+            category = category,
+            ingredients = ingredients,
+            steps = steps,
+            notes = notes,
             authorId = authorId,
             authorName = authorName,
             createdAt = createdAt
@@ -51,6 +61,12 @@ class RecipeRepository(context: Context) {
             title = title,
             description = description,
             imageUrl = imageUrl,
+            prepTime = prepTime,
+            difficulty = difficulty,
+            category = category,
+            ingredients = ingredients,
+            steps = steps,
+            notes = notes,
             authorId = authorId,
             authorName = authorName,
             createdAt = createdAt
