@@ -74,8 +74,23 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             email = email,
             password = password,
             onSuccess = {
-                _loading.postValue(false)
-                _loginSuccess.postValue(true)
+                val firebaseUser = authRepository.getCurrentUser()
+                val uid = firebaseUser?.uid.orEmpty()
+
+                viewModelScope.launch {
+                    val existingUser = if (uid.isNotEmpty()) userRepository.getUser(uid) else null
+
+                    val user = User(
+                        uid = uid,
+                        name = existingUser?.name ?: "",
+                        email = firebaseUser?.email ?: email,
+                        profileImageUrl = existingUser?.profileImageUrl ?: ""
+                    )
+
+                    userRepository.saveUser(user)
+                    _loading.postValue(false)
+                    _loginSuccess.postValue(true)
+                }
             },
             onError = { errorMessage ->
                 _loading.postValue(false)
@@ -154,9 +169,5 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout() {
         authRepository.logout()
-
-        viewModelScope.launch {
-            userRepository.clearUsers()
-        }
     }
 }

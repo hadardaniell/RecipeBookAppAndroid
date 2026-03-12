@@ -24,7 +24,23 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         binding.btnSaveRecipe.setOnClickListener {
             val title = binding.etTitle.text.toString().trim()
             val description = binding.etDescription.text.toString().trim()
-            viewModel.addRecipe(title, description)
+            val prepTime = binding.etPrepTime.text.toString().trim()
+            val difficulty = binding.etDifficulty.text.toString().trim()
+            val category = binding.etCategory.text.toString().trim()
+            val ingredients = binding.etIngredients.text.toString().trim()
+            val steps = binding.etSteps.text.toString().trim()
+            val notes = binding.etNotes.text.toString().trim()
+
+            viewModel.addRecipe(
+                title = title,
+                description = description,
+                prepTime = prepTime,
+                difficulty = difficulty,
+                category = category,
+                ingredients = ingredients,
+                steps = steps,
+                notes = notes
+            )
         }
 
         observeViewModel()
@@ -37,6 +53,26 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
 
         viewModel.descriptionError.observe(viewLifecycleOwner) { error ->
             binding.descriptionInputLayout.error = error
+        }
+
+        viewModel.prepTimeError.observe(viewLifecycleOwner) { error ->
+            binding.prepTimeInputLayout.error = error
+        }
+
+        viewModel.difficultyError.observe(viewLifecycleOwner) { error ->
+            binding.difficultyInputLayout.error = error
+        }
+
+        viewModel.categoryError.observe(viewLifecycleOwner) { error ->
+            binding.categoryInputLayout.error = error
+        }
+
+        viewModel.ingredientsError.observe(viewLifecycleOwner) { error ->
+            binding.ingredientsInputLayout.error = error
+        }
+
+        viewModel.stepsError.observe(viewLifecycleOwner) { error ->
+            binding.stepsInputLayout.error = error
         }
 
         viewModel.saveSuccess.observe(viewLifecycleOwner) { success ->

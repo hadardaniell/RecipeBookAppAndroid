@@ -1,5 +1,6 @@
 package com.example.recipebookappandorid.data.local.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -20,7 +21,7 @@ interface RecipeDao {
     suspend fun updateRecipe(recipe: RecipeEntity)
 
     @Query("SELECT * FROM recipes ORDER BY createdAt DESC")
-    suspend fun getAllRecipes(): List<RecipeEntity>
+    fun getAllRecipes(): LiveData<List<RecipeEntity>>
 
     @Query("SELECT * FROM recipes WHERE authorId = :authorId ORDER BY createdAt DESC")
     suspend fun getRecipesByAuthor(authorId: String): List<RecipeEntity>

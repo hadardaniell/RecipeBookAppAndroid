@@ -25,12 +25,25 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val nameError: LiveData<String?> = _nameError
 
     fun loadCurrentUser() {
-        val currentUser = authRepository.getCurrentUser() ?: return
-        val uid = currentUser.uid
+        val firebaseUser = authRepository.getCurrentUser() ?: return
+        val uid = firebaseUser.uid
 
         viewModelScope.launch {
             val localUser = userRepository.getUser(uid)
-            _user.postValue(localUser)
+
+            if (localUser != null) {
+                _user.postValue(localUser)
+            } else {
+                val fallbackUser = User(
+                    uid = uid,
+                    name = "",
+                    email = firebaseUser.email ?: "",
+                    profileImageUrl = firebaseUser.photoUrl?.toString() ?: ""
+                )
+
+                userRepository.saveUser(fallbackUser)
+                _user.postValue(fallbackUser)
+            }
         }
     }
 

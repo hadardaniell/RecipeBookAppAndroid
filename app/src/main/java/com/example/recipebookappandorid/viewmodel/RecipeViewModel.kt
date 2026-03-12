@@ -24,12 +24,41 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val _descriptionError = MutableLiveData<String?>()
     val descriptionError: LiveData<String?> = _descriptionError
 
+    private val _prepTimeError = MutableLiveData<String?>()
+    val prepTimeError: LiveData<String?> = _prepTimeError
+
+    private val _difficultyError = MutableLiveData<String?>()
+    val difficultyError: LiveData<String?> = _difficultyError
+
+    private val _categoryError = MutableLiveData<String?>()
+    val categoryError: LiveData<String?> = _categoryError
+
+    private val _ingredientsError = MutableLiveData<String?>()
+    val ingredientsError: LiveData<String?> = _ingredientsError
+
+    private val _stepsError = MutableLiveData<String?>()
+    val stepsError: LiveData<String?> = _stepsError
+
     private val _saveSuccess = MutableLiveData<Boolean>()
     val saveSuccess: LiveData<Boolean> = _saveSuccess
 
-    fun addRecipe(title: String, description: String) {
+    fun addRecipe(
+        title: String,
+        description: String,
+        prepTime: String,
+        difficulty: String,
+        category: String,
+        ingredients: String,
+        steps: String,
+        notes: String
+    ) {
         _titleError.value = null
         _descriptionError.value = null
+        _prepTimeError.value = null
+        _difficultyError.value = null
+        _categoryError.value = null
+        _ingredientsError.value = null
+        _stepsError.value = null
 
         var isValid = true
 
@@ -40,6 +69,31 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
         if (description.isBlank()) {
             _descriptionError.value = "Description is required"
+            isValid = false
+        }
+
+        if (prepTime.isBlank()) {
+            _prepTimeError.value = "Prep time is required"
+            isValid = false
+        }
+
+        if (difficulty.isBlank()) {
+            _difficultyError.value = "Difficulty is required"
+            isValid = false
+        }
+
+        if (category.isBlank()) {
+            _categoryError.value = "Category is required"
+            isValid = false
+        }
+
+        if (ingredients.isBlank()) {
+            _ingredientsError.value = "Ingredients are required"
+            isValid = false
+        }
+
+        if (steps.isBlank()) {
+            _stepsError.value = "Preparation steps are required"
             isValid = false
         }
 
@@ -56,6 +110,12 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 title = title,
                 description = description,
                 imageUrl = "",
+                prepTime = prepTime,
+                difficulty = difficulty,
+                category = category,
+                ingredients = ingredients,
+                steps = steps,
+                notes = notes,
                 authorId = uid,
                 authorName = currentUser?.name ?: "Unknown",
                 createdAt = System.currentTimeMillis()

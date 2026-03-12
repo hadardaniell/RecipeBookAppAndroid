@@ -29,7 +29,17 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         binding.btnLogout.setOnClickListener {
             authViewModel.logout()
-            findNavController().navigate(R.id.loginFragment)
+
+            val rootNavController = androidx.navigation.Navigation.findNavController(
+                requireActivity(),
+                R.id.nav_host_fragment
+            )
+
+            val navOptions = androidx.navigation.NavOptions.Builder()
+                .setPopUpTo(R.id.mainContainerFragment, true)
+                .build()
+
+            rootNavController.navigate(R.id.loginFragment, null, navOptions)
         }
 
         observeViewModel()

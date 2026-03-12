@@ -8,10 +8,9 @@ import com.example.recipebookappandorid.data.local.dao.RecipeDao
 import com.example.recipebookappandorid.data.local.dao.UserDao
 import com.example.recipebookappandorid.data.local.entity.RecipeEntity
 import com.example.recipebookappandorid.data.local.entity.UserEntity
-
 @Database(
     entities = [UserEntity::class, RecipeEntity::class],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
