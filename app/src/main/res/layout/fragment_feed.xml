@@ -43,23 +43,31 @@
                 android:orientation="horizontal">
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipBreakfast"
+                    android:checkable="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Breakfast" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPasta"
+                    android:checkable="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Pasta" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipHealthy"
+                    android:checkable="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Healthy" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDessert"
+                    android:checkable="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -71,18 +79,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Popular now"
+            android:text="Discover"
             android:textColor="@android:color/black"
             android:textSize="20sp"
             android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvPopularRecipes"
+            android:id="@+id/rvFeedSections"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:nestedScrollingEnabled="false"
-            tools:listitem="@layout/item_recipe" />
+            android:nestedScrollingEnabled="false" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
