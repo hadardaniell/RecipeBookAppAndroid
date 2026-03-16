@@ -42,6 +42,9 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val _saveSuccess = MutableLiveData<Boolean>()
     val saveSuccess: LiveData<Boolean> = _saveSuccess
 
+    private val _importSuccess = MutableLiveData<Boolean>()
+    val importSuccess: LiveData<Boolean> = _importSuccess
+
     fun addRecipe(
         title: String,
         description: String,
@@ -123,6 +126,24 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
             recipeRepository.saveRecipe(recipe)
             _saveSuccess.postValue(true)
+        }
+    }
+
+    fun importRecipe(recipe: Recipe) {
+        val firebaseUser = authRepository.getCurrentUser() ?: return
+        val uid = firebaseUser.uid
+
+        viewModelScope.launch {
+            val currentUser = userRepository.getUser(uid)
+            val importedRecipe = recipe.copy(
+                id = UUID.randomUUID().toString(),
+                authorId = uid,
+                authorName = currentUser?.name ?: firebaseUser.email ?: "My Recipe",
+                createdAt = System.currentTimeMillis()
+            )
+
+            recipeRepository.saveRecipe(importedRecipe)
+            _importSuccess.postValue(true)
         }
     }
 }

@@ -6,6 +6,18 @@ import com.example.recipebookappandorid.model.Recipe
 
 class MealRepository {
 
+    suspend fun getCategories(): List<String> {
+        return runCatching {
+            RetrofitClient.mealApiService.getCategories().categories.orEmpty()
+                .mapNotNull { it.strCategory?.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .take(8)
+        }.getOrElse {
+            emptyList()
+        }
+    }
+
     suspend fun getStarterMeals(): List<Recipe> {
         return fetchMeals {
             RetrofitClient.mealApiService.getStarterMeals("a").meals.orEmpty()

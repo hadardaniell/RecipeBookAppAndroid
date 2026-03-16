@@ -37,42 +37,12 @@
             android:layout_marginTop="16dp"
             android:scrollbars="none">
 
-            <LinearLayout
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupCategories"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipBreakfast"
-                    android:checkable="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Breakfast" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipPasta"
-                    android:checkable="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Pasta" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipHealthy"
-                    android:checkable="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Healthy" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipDessert"
-                    android:checkable="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Dessert" />
-            </LinearLayout>
+                app:singleSelection="true"
+                app:singleLine="true" />
         </HorizontalScrollView>
 
         <TextView
@@ -90,6 +60,24 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:nestedScrollingEnabled="false" />
+
+        <ProgressBar
+            android:id="@+id/progressFeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:text="No recipes found"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
