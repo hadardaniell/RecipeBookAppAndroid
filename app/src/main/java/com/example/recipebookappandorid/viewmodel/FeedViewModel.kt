@@ -8,6 +8,8 @@ import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.RecipeSection
 import com.example.recipebookappandorid.repository.MealRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class FeedViewModel(application: Application) : AndroidViewModel(application) {
@@ -19,6 +21,7 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     private var remoteRecipes: List<Recipe> = emptyList()
     private var currentQuery: String = ""
     private var selectedCategory: String? = null
+    private var remoteSearchJob: Job? = null
 
     val sections = MediatorLiveData<List<RecipeSection>>().apply {
         addSource(allRecipes) { recipes ->
@@ -29,22 +32,44 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        loadRemoteMeals()
+        loadStarterMeals()
     }
 
     fun setSearchQuery(query: String) {
-        currentQuery = query
-        sections.value = buildSections(
-            filterRecipes(
-                allRecipes.value.orEmpty() + remoteRecipes,
-                currentQuery,
-                selectedCategory
-            )
-        )
+        currentQuery = query.trim()
+        refreshSections()
+        searchRemoteMeals()
     }
 
     fun setCategoryFilter(category: String?) {
         selectedCategory = category
+        refreshSections()
+    }
+
+    private fun searchRemoteMeals() {
+        remoteSearchJob?.cancel()
+        remoteSearchJob = viewModelScope.launch {
+            if (currentQuery.isBlank()) {
+                remoteRecipes = mealRepository.getStarterMeals()
+                refreshSections()
+                return@launch
+            }
+
+            delay(350)
+            remoteRecipes = mealRepository.searchMeals(currentQuery)
+            refreshSections()
+        }
+    }
+
+    private fun loadStarterMeals() {
+        remoteSearchJob?.cancel()
+        viewModelScope.launch {
+            remoteRecipes = mealRepository.getStarterMeals()
+            refreshSections()
+        }
+    }
+
+    private fun refreshSections() {
         sections.value = buildSections(
             filterRecipes(
                 allRecipes.value.orEmpty() + remoteRecipes,
@@ -90,7 +115,7 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
         if (importedMeals.isNotEmpty()) {
             sections.add(
                 RecipeSection(
-                    title = "From TheMealDB",
+                    title = if (currentQuery.isBlank()) "From TheMealDB" else "Search results",
                     recipes = importedMeals.take(10)
                 )
             )
@@ -133,21 +158,6 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
             }
 
         return sections.distinctBy { it.title }
-    }
-
-    private fun loadRemoteMeals() {
-        viewModelScope.launch {
-            remoteRecipes = mealRepository.getStarterMeals()
-            sections.postValue(
-                buildSections(
-                    filterRecipes(
-                        allRecipes.value.orEmpty() + remoteRecipes,
-                        currentQuery,
-                        selectedCategory
-                    )
-                )
-            )
-        }
     }
 
     private fun extractMinutes(prepTime: String): Int {
