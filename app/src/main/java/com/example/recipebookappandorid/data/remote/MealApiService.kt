@@ -7,7 +7,12 @@ import retrofit2.http.Query
 interface MealApiService {
 
     @GET("search.php")
-    suspend fun searchMeals(
+    suspend fun getStarterMeals(
         @Query("f") firstLetter: String
+    ): MealListResponse
+
+    @GET("search.php")
+    suspend fun searchMealsByName(
+        @Query("s") query: String
     ): MealListResponse
 }
