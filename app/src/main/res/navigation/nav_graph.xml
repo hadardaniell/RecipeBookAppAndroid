@@ -54,7 +54,16 @@
         android:label="Recipe Details">
 
         <argument
+            android:name="description"
+            app:argType="string" />
+        <argument
+            android:name="imageUrl"
+            app:argType="string" />
+        <argument
             android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="authorId"
             app:argType="string" />
         <argument
             android:name="authorName"
@@ -77,6 +86,9 @@
         <argument
             android:name="notes"
             app:argType="string" />
+        <argument
+            android:name="isRemote"
+            app:argType="boolean" />
     </fragment>
 
     <fragment
@@ -101,7 +113,12 @@
     <fragment
         android:id="@+id/addRecipeFragment"
         android:name="com.example.recipebookappandorid.ui.recipes.AddRecipeFragment"
-        android:label="Add Recipe" />
+        android:label="Add Recipe">
+
+        <action
+            android:id="@+id/action_addRecipeFragment_to_recipeDetailsFragment"
+            app:destination="@id/recipeDetailsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/mainContainerFragment"

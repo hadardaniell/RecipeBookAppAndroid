@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.chip.Chip
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentFeedBinding
 import com.example.recipebookappandorid.model.Recipe
@@ -30,8 +31,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
         setupRecyclerView()
         setupSearch()
-        setupChips()
         observeSections()
+        observeCategories()
+        observeLoading()
+        observeEmptyState()
     }
 
     private fun setupRecyclerView() {
@@ -49,24 +52,16 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         }
     }
 
-    private fun setupChips() {
-        binding.chipBreakfast.setOnClickListener { toggleCategory("Breakfast") }
-        binding.chipPasta.setOnClickListener { toggleCategory("Pasta") }
-        binding.chipHealthy.setOnClickListener { toggleCategory("Healthy") }
-        binding.chipDessert.setOnClickListener { toggleCategory("Dessert") }
-    }
-
     private fun toggleCategory(category: String) {
         selectedChip = if (selectedChip == category) null else category
         viewModel.setCategoryFilter(selectedChip)
-        updateChipSelection()
+        renderCategoryChips(viewModel.categories.value.orEmpty())
     }
 
-    private fun updateChipSelection() {
-        binding.chipBreakfast.isChecked = selectedChip == "Breakfast"
-        binding.chipPasta.isChecked = selectedChip == "Pasta"
-        binding.chipHealthy.isChecked = selectedChip == "Healthy"
-        binding.chipDessert.isChecked = selectedChip == "Dessert"
+    private fun observeCategories() {
+        viewModel.categories.observe(viewLifecycleOwner) { categories ->
+            renderCategoryChips(categories)
+        }
     }
 
     private fun observeSections() {
@@ -75,16 +70,48 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         }
     }
 
+    private fun observeLoading() {
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.progressFeed.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun observeEmptyState() {
+        viewModel.emptyStateMessage.observe(viewLifecycleOwner) { message ->
+            binding.tvEmptyState.text = message
+            binding.tvEmptyState.visibility =
+                if (message.isNullOrBlank()) View.GONE else View.VISIBLE
+        }
+    }
+
+    private fun renderCategoryChips(categories: List<String>) {
+        binding.chipGroupCategories.removeAllViews()
+
+        categories.forEach { category ->
+            val chip = Chip(requireContext()).apply {
+                text = category
+                isCheckable = true
+                isChecked = selectedChip == category
+                setOnClickListener { toggleCategory(category) }
+            }
+            binding.chipGroupCategories.addView(chip)
+        }
+    }
+
     private fun openRecipe(recipe: Recipe) {
         val action = FeedFragmentDirections.actionFeedFragmentToRecipeDetailsFragment(
+            description = recipe.description,
+            imageUrl = recipe.imageUrl,
             title = recipe.title,
+            authorId = recipe.authorId,
             authorName = recipe.authorName,
             prepTime = recipe.prepTime,
             difficulty = recipe.difficulty,
             category = recipe.category,
             ingredients = recipe.ingredients,
             steps = recipe.steps,
-            notes = recipe.notes
+            notes = recipe.notes,
+            isRemote = recipe.authorId == "themealdb"
         )
         findNavController().navigate(action)
     }

@@ -1,6 +1,7 @@
 package com.example.recipebookappandorid.data.remote
 
 import com.example.recipebookappandorid.data.remote.dto.MealListResponse
+import com.example.recipebookappandorid.data.remote.dto.MealCategoryListResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -15,4 +16,7 @@ interface MealApiService {
     suspend fun searchMealsByName(
         @Query("s") query: String
     ): MealListResponse
+
+    @GET("categories.php")
+    suspend fun getCategories(): MealCategoryListResponse
 }

@@ -2,10 +2,13 @@ package com.example.recipebookappandorid.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.RecipeSection
+import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.MealRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
 import kotlinx.coroutines.Job
@@ -15,6 +18,7 @@ import kotlinx.coroutines.launch
 class FeedViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RecipeRepository(application)
+    private val authRepository = AuthRepository()
     private val mealRepository = MealRepository()
     private val allRecipes = repository.getAllRecipes()
 
@@ -22,16 +26,27 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     private var currentQuery: String = ""
     private var selectedCategory: String? = null
     private var remoteSearchJob: Job? = null
+    private val _categories = MutableLiveData<List<String>>(emptyList())
+    val categories: LiveData<List<String>> = _categories
+
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _emptyStateMessage = MutableLiveData<String?>(null)
+    val emptyStateMessage: LiveData<String?> = _emptyStateMessage
 
     val sections = MediatorLiveData<List<RecipeSection>>().apply {
         addSource(allRecipes) { recipes ->
             value = buildSections(
                 filterRecipes(recipes + remoteRecipes, currentQuery, selectedCategory)
             )
+            updateEmptyState(value.orEmpty())
         }
     }
 
     init {
+        syncCloudRecipes()
+        loadCategories()
         loadStarterMeals()
     }
 
@@ -49,34 +64,69 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     private fun searchRemoteMeals() {
         remoteSearchJob?.cancel()
         remoteSearchJob = viewModelScope.launch {
+            _isLoading.postValue(true)
             if (currentQuery.isBlank()) {
                 remoteRecipes = mealRepository.getStarterMeals()
                 refreshSections()
+                _isLoading.postValue(false)
+                updateEmptyState(sections.value.orEmpty())
                 return@launch
             }
 
             delay(350)
             remoteRecipes = mealRepository.searchMeals(currentQuery)
             refreshSections()
+            _isLoading.postValue(false)
+            updateEmptyState(sections.value.orEmpty())
         }
     }
 
     private fun loadStarterMeals() {
         remoteSearchJob?.cancel()
         viewModelScope.launch {
+            _isLoading.postValue(true)
             remoteRecipes = mealRepository.getStarterMeals()
             refreshSections()
+            _isLoading.postValue(false)
+            updateEmptyState(sections.value.orEmpty())
         }
     }
 
     private fun refreshSections() {
-        sections.value = buildSections(
+        val newSections = buildSections(
             filterRecipes(
                 allRecipes.value.orEmpty() + remoteRecipes,
                 currentQuery,
                 selectedCategory
             )
         )
+        sections.value = newSections
+        updateEmptyState(newSections)
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            _categories.postValue(mealRepository.getCategories())
+        }
+    }
+
+    private fun syncCloudRecipes() {
+        val user = authRepository.getCurrentUser() ?: return
+
+        viewModelScope.launch {
+            runCatching {
+                repository.syncUserRecipesFromCloud(user.uid)
+            }
+        }
+    }
+
+    private fun updateEmptyState(sections: List<RecipeSection>) {
+        _emptyStateMessage.value = when {
+            _isLoading.value == true -> null
+            sections.isNotEmpty() -> null
+            currentQuery.isNotBlank() -> "No recipes found for \"$currentQuery\""
+            else -> "No recipes available yet"
+        }
     }
 
     private fun filterRecipes(
