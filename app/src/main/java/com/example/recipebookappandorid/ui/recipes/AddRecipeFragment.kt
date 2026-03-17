@@ -122,7 +122,33 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         viewModel.saveSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 Toast.makeText(requireContext(), "Recipe saved", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
+            }
+        }
+
+        viewModel.saveError.observe(viewLifecycleOwner) { error ->
+            if (!error.isNullOrBlank()) {
+                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        viewModel.savedRecipe.observe(viewLifecycleOwner) { recipe ->
+            if (recipe != null) {
+                val action = AddRecipeFragmentDirections.actionAddRecipeFragmentToRecipeDetailsFragment(
+                    description = recipe.description,
+                    imageUrl = recipe.imageUrl,
+                    title = recipe.title,
+                    authorId = recipe.authorId,
+                    authorName = recipe.authorName,
+                    prepTime = recipe.prepTime,
+                    difficulty = recipe.difficulty,
+                    category = recipe.category,
+                    ingredients = recipe.ingredients,
+                    steps = recipe.steps,
+                    notes = recipe.notes,
+                    isRemote = false
+                )
+                viewModel.onRecipeNavigationHandled()
+                findNavController().navigate(action)
             }
         }
     }

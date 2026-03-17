@@ -19,9 +19,16 @@ class MealRepository {
     }
 
     suspend fun getStarterMeals(): List<Recipe> {
-        return fetchMeals {
-            RetrofitClient.mealApiService.getStarterMeals("a").meals.orEmpty()
-        }.take(12)
+        val starterLetters = listOf("a", "b", "c")
+
+        return starterLetters
+            .flatMap { letter ->
+                fetchMeals {
+                    RetrofitClient.mealApiService.getStarterMeals(letter).meals.orEmpty()
+                }
+            }
+            .distinctBy { it.id }
+            .take(12)
     }
 
     suspend fun searchMeals(query: String): List<Recipe> {

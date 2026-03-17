@@ -71,6 +71,12 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
                 binding.btnImportRecipe.text = "Imported"
             }
         }
+
+        viewModel.saveError.observe(viewLifecycleOwner) { error ->
+            if (!error.isNullOrBlank()) {
+                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     override fun onDestroyView() {

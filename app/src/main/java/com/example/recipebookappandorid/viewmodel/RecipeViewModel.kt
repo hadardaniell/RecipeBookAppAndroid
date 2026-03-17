@@ -45,6 +45,12 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val _importSuccess = MutableLiveData<Boolean>()
     val importSuccess: LiveData<Boolean> = _importSuccess
 
+    private val _saveError = MutableLiveData<String?>()
+    val saveError: LiveData<String?> = _saveError
+
+    private val _savedRecipe = MutableLiveData<Recipe?>()
+    val savedRecipe: LiveData<Recipe?> = _savedRecipe
+
     fun addRecipe(
         title: String,
         description: String,
@@ -62,6 +68,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         _categoryError.value = null
         _ingredientsError.value = null
         _stepsError.value = null
+        _saveError.value = null
+        _savedRecipe.value = null
 
         var isValid = true
 
@@ -102,7 +110,11 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
         if (!isValid) return
 
-        val firebaseUser = authRepository.getCurrentUser() ?: return
+        val firebaseUser = authRepository.getCurrentUser()
+        if (firebaseUser == null) {
+            _saveError.value = "You must be logged in to save a recipe"
+            return
+        }
         val uid = firebaseUser.uid
 
         viewModelScope.launch {
@@ -120,18 +132,29 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 steps = steps,
                 notes = notes,
                 authorId = uid,
-                authorName = currentUser?.name ?: "Unknown",
+                authorName = currentUser?.name ?: firebaseUser.email ?: "Unknown",
                 createdAt = System.currentTimeMillis()
             )
 
-            recipeRepository.saveRecipe(recipe)
-            _saveSuccess.postValue(true)
+            runCatching {
+                recipeRepository.saveRecipe(recipe)
+            }.onSuccess {
+                _savedRecipe.postValue(recipe)
+                _saveSuccess.postValue(true)
+            }.onFailure { exception ->
+                _saveError.postValue(exception.message ?: "Failed to save recipe")
+            }
         }
     }
 
     fun importRecipe(recipe: Recipe) {
-        val firebaseUser = authRepository.getCurrentUser() ?: return
+        val firebaseUser = authRepository.getCurrentUser()
+        if (firebaseUser == null) {
+            _saveError.value = "You must be logged in to import a recipe"
+            return
+        }
         val uid = firebaseUser.uid
+        _saveError.value = null
 
         viewModelScope.launch {
             val currentUser = userRepository.getUser(uid)
@@ -142,8 +165,17 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 createdAt = System.currentTimeMillis()
             )
 
-            recipeRepository.saveRecipe(importedRecipe)
-            _importSuccess.postValue(true)
+            runCatching {
+                recipeRepository.saveRecipe(importedRecipe)
+            }.onSuccess {
+                _importSuccess.postValue(true)
+            }.onFailure { exception ->
+                _saveError.postValue(exception.message ?: "Failed to import recipe")
+            }
         }
+    }
+
+    fun onRecipeNavigationHandled() {
+        _savedRecipe.value = null
     }
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.RecipeSection
+import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.MealRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
 import kotlinx.coroutines.Job
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 class FeedViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RecipeRepository(application)
+    private val authRepository = AuthRepository()
     private val mealRepository = MealRepository()
     private val allRecipes = repository.getAllRecipes()
 
@@ -43,6 +45,7 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
+        syncCloudRecipes()
         loadCategories()
         loadStarterMeals()
     }
@@ -104,6 +107,16 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadCategories() {
         viewModelScope.launch {
             _categories.postValue(mealRepository.getCategories())
+        }
+    }
+
+    private fun syncCloudRecipes() {
+        val user = authRepository.getCurrentUser() ?: return
+
+        viewModelScope.launch {
+            runCatching {
+                repository.syncUserRecipesFromCloud(user.uid)
+            }
         }
     }
 

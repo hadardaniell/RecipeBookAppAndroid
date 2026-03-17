@@ -1,6 +1,10 @@
 package com.example.recipebookappandorid.repository
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 
 class AuthRepository {
@@ -18,7 +22,8 @@ class AuthRepository {
                 onSuccess()
             }
             .addOnFailureListener { exception ->
-                onError(exception.message ?: "Login failed")
+                Log.e("AuthRepository", "Login failed", exception)
+                onError(mapAuthError(exception, fallbackMessage = "Login failed"))
             }
     }
 
@@ -33,7 +38,8 @@ class AuthRepository {
                 onSuccess(result.user)
             }
             .addOnFailureListener { exception ->
-                onError(exception.message ?: "Register failed")
+                Log.e("AuthRepository", "Register failed", exception)
+                onError(mapAuthError(exception, fallbackMessage = "Register failed"))
             }
     }
 
@@ -41,5 +47,27 @@ class AuthRepository {
 
     fun logout() {
         auth.signOut()
+    }
+
+    private fun mapAuthError(exception: Exception, fallbackMessage: String): String {
+        return when (exception) {
+            is FirebaseAuthInvalidUserException -> {
+                "No account found for this email (${exception.errorCode})"
+            }
+
+            is FirebaseAuthInvalidCredentialsException -> {
+                when (exception.errorCode) {
+                    "ERROR_WRONG_PASSWORD" -> "Incorrect password"
+                    "ERROR_INVALID_EMAIL" -> "Invalid email format"
+                    else -> "Invalid credentials (${exception.errorCode})"
+                }
+            }
+
+            is FirebaseAuthException -> {
+                "${exception.localizedMessage ?: fallbackMessage} (${exception.errorCode})"
+            }
+
+            else -> exception.localizedMessage ?: fallbackMessage
+        }
     }
 }
