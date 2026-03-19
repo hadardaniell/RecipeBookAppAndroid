@@ -40,6 +40,7 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         binding.tvSteps.text = args.steps
         binding.tvNotes.text = args.notes
         binding.btnImportRecipe.visibility = if (args.isRemote) View.VISIBLE else View.GONE
+        binding.layoutRecipeActions.visibility = if (args.isRemote) View.GONE else View.VISIBLE
 
         binding.btnBack.setOnClickListener {
             findNavController().navigateUp()
@@ -48,7 +49,7 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         binding.btnImportRecipe.setOnClickListener {
             viewModel.importRecipe(
                 Recipe(
-                    id = args.authorId,
+                    id = args.id,
                     title = args.title,
                     description = args.description,
                     imageUrl = args.imageUrl,
@@ -64,6 +65,27 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
             )
         }
 
+        binding.btnEditRecipe.setOnClickListener {
+            val action = RecipeDetailsFragmentDirections.actionRecipeDetailsFragmentToAddRecipeFragment(
+                recipeId = args.id,
+                title = args.title,
+                description = args.description,
+                imageUrl = args.imageUrl,
+                prepTime = args.prepTime,
+                difficulty = args.difficulty,
+                category = args.category,
+                ingredients = args.ingredients,
+                steps = args.steps,
+                notes = args.notes,
+                isEditMode = true
+            )
+            findNavController().navigate(action)
+        }
+
+        binding.btnDeleteRecipe.setOnClickListener {
+            viewModel.deleteRecipe(args.id)
+        }
+
         viewModel.importSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 Toast.makeText(requireContext(), "Recipe imported", Toast.LENGTH_SHORT).show()
@@ -75,6 +97,13 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         viewModel.saveError.observe(viewLifecycleOwner) { error ->
             if (!error.isNullOrBlank()) {
                 Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        viewModel.deleteSuccess.observe(viewLifecycleOwner) { success ->
+            if (success) {
+                Toast.makeText(requireContext(), "Recipe deleted", Toast.LENGTH_SHORT).show()
+                findNavController().navigateUp()
             }
         }
     }

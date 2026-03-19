@@ -62,8 +62,10 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddRecipeBinding.bind(view)
+        val args = AddRecipeFragmentArgs.fromBundle(requireArguments())
 
         setupDropdowns()
+        populateForEdit(args)
 
         binding.btnSaveRecipe.setOnClickListener {
             val title = binding.etTitle.text.toString().trim()
@@ -75,16 +77,31 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
             val steps = binding.etSteps.text.toString().trim()
             val notes = binding.etNotes.text.toString().trim()
 
-            viewModel.addRecipe(
-                title = title,
-                description = description,
-                prepTime = prepTime,
-                difficulty = difficulty,
-                category = category,
-                ingredients = ingredients,
-                steps = steps,
-                notes = notes
-            )
+            if (args.isEditMode) {
+                viewModel.updateRecipe(
+                    recipeId = args.recipeId,
+                    title = title,
+                    description = description,
+                    imageUrl = args.imageUrl,
+                    prepTime = prepTime,
+                    difficulty = difficulty,
+                    category = category,
+                    ingredients = ingredients,
+                    steps = steps,
+                    notes = notes
+                )
+            } else {
+                viewModel.addRecipe(
+                    title = title,
+                    description = description,
+                    prepTime = prepTime,
+                    difficulty = difficulty,
+                    category = category,
+                    ingredients = ingredients,
+                    steps = steps,
+                    notes = notes
+                )
+            }
         }
 
         observeViewModel()
@@ -134,6 +151,7 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         viewModel.savedRecipe.observe(viewLifecycleOwner) { recipe ->
             if (recipe != null) {
                 val action = AddRecipeFragmentDirections.actionAddRecipeFragmentToRecipeDetailsFragment(
+                    id = recipe.id,
                     description = recipe.description,
                     imageUrl = recipe.imageUrl,
                     title = recipe.title,
@@ -151,6 +169,20 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
                 findNavController().navigate(action)
             }
         }
+    }
+
+    private fun populateForEdit(args: AddRecipeFragmentArgs) {
+        if (!args.isEditMode) return
+
+        binding.etTitle.setText(args.title)
+        binding.etDescription.setText(args.description)
+        binding.etPrepTime.setText(args.prepTime, false)
+        binding.etDifficulty.setText(args.difficulty, false)
+        binding.etCategory.setText(args.category, false)
+        binding.etIngredients.setText(args.ingredients)
+        binding.etSteps.setText(args.steps)
+        binding.etNotes.setText(args.notes)
+        binding.btnSaveRecipe.text = "Save Changes"
     }
 
     override fun onDestroyView() {

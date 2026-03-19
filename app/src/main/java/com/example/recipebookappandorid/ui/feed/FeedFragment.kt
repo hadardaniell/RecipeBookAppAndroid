@@ -100,6 +100,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private fun openRecipe(recipe: Recipe) {
         val action = FeedFragmentDirections.actionFeedFragmentToRecipeDetailsFragment(
+            id = recipe.id,
             description = recipe.description,
             imageUrl = recipe.imageUrl,
             title = recipe.title,

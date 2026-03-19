@@ -51,6 +51,9 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val _savedRecipe = MutableLiveData<Recipe?>()
     val savedRecipe: LiveData<Recipe?> = _savedRecipe
 
+    private val _deleteSuccess = MutableLiveData<Boolean>()
+    val deleteSuccess: LiveData<Boolean> = _deleteSuccess
+
     fun addRecipe(
         title: String,
         description: String,
@@ -177,5 +180,69 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
     fun onRecipeNavigationHandled() {
         _savedRecipe.value = null
+    }
+
+    fun updateRecipe(
+        recipeId: String,
+        title: String,
+        description: String,
+        imageUrl: String,
+        prepTime: String,
+        difficulty: String,
+        category: String,
+        ingredients: String,
+        steps: String,
+        notes: String
+    ) {
+        _saveError.value = null
+        _savedRecipe.value = null
+
+        val firebaseUser = authRepository.getCurrentUser()
+        if (firebaseUser == null) {
+            _saveError.value = "You must be logged in to update a recipe"
+            return
+        }
+
+        viewModelScope.launch {
+            val currentUser = userRepository.getUser(firebaseUser.uid)
+            val recipe = Recipe(
+                id = recipeId,
+                title = title,
+                description = description,
+                imageUrl = imageUrl,
+                prepTime = prepTime,
+                difficulty = difficulty,
+                category = category,
+                ingredients = ingredients,
+                steps = steps,
+                notes = notes,
+                authorId = firebaseUser.uid,
+                authorName = currentUser?.name ?: firebaseUser.email ?: "My Recipe",
+                createdAt = System.currentTimeMillis()
+            )
+
+            runCatching {
+                recipeRepository.updateRecipe(recipe)
+            }.onSuccess {
+                _savedRecipe.postValue(recipe)
+                _saveSuccess.postValue(true)
+            }.onFailure { exception ->
+                _saveError.postValue(exception.message ?: "Failed to update recipe")
+            }
+        }
+    }
+
+    fun deleteRecipe(recipeId: String) {
+        _saveError.value = null
+
+        viewModelScope.launch {
+            runCatching {
+                recipeRepository.deleteRecipe(recipeId)
+            }.onSuccess {
+                _deleteSuccess.postValue(true)
+            }.onFailure { exception ->
+                _saveError.postValue(exception.message ?: "Failed to delete recipe")
+            }
+        }
     }
 }

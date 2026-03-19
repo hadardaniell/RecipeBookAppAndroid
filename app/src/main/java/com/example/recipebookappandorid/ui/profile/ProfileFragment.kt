@@ -27,6 +27,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             findNavController().navigate(R.id.editProfileFragment)
         }
 
+        binding.btnMyRecipes.setOnClickListener {
+            findNavController().navigate(R.id.myRecipesFragment)
+        }
+
         binding.btnLogout.setOnClickListener {
             authViewModel.logout()
 
