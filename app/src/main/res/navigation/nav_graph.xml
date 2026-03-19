@@ -53,6 +53,13 @@
         android:name="com.example.recipebookappandorid.ui.recipe.RecipeDetailsFragment"
         android:label="Recipe Details">
 
+        <action
+            android:id="@+id/action_recipeDetailsFragment_to_addRecipeFragment"
+            app:destination="@id/addRecipeFragment" />
+
+        <argument
+            android:name="id"
+            app:argType="string" />
         <argument
             android:name="description"
             app:argType="string" />
@@ -103,6 +110,10 @@
         <action
             android:id="@+id/action_profileFragment_to_editProfileFragment"
             app:destination="@id/editProfileFragment" />
+
+        <action
+            android:id="@+id/action_profileFragment_to_myRecipesFragment"
+            app:destination="@id/myRecipesFragment" />
     </fragment>
 
     <fragment
@@ -117,6 +128,61 @@
 
         <action
             android:id="@+id/action_addRecipeFragment_to_recipeDetailsFragment"
+            app:destination="@id/recipeDetailsFragment" />
+
+        <argument
+            android:name="recipeId"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="title"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="description"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="imageUrl"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="prepTime"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="difficulty"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="category"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="ingredients"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="steps"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="notes"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="isEditMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/myRecipesFragment"
+        android:name="com.example.recipebookappandorid.ui.profile.MyRecipesFragment"
+        android:label="My Recipes">
+
+        <action
+            android:id="@+id/action_myRecipesFragment_to_recipeDetailsFragment"
             app:destination="@id/recipeDetailsFragment" />
     </fragment>
 

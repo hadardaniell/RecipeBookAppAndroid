@@ -50,6 +50,33 @@
             android:textAllCaps="false"
             android:visibility="gone" />
 
+        <LinearLayout
+            android:id="@+id/layoutRecipeActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditRecipe"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Edit"
+                android:textAllCaps="false" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteRecipe"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="Delete"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tvPrepTime"
             android:layout_width="match_parent"
