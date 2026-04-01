@@ -56,7 +56,7 @@
             android:layout_marginTop="-18dp"
             android:elevation="4dp"
             android:hint="Search recipes"
-            app:startIconDrawable="@android:drawable/ic_menu_search">
+            app:startIconDrawable="@drawable/ic_search_modern">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etSearch"

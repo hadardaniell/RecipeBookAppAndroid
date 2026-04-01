@@ -1,6 +1,7 @@
 package com.example.recipebookappandorid.ui.recipe
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -9,7 +10,9 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentRecipeDetailsBinding
+import com.example.recipebookappandorid.databinding.ItemIngredientDisplayBinding
 import com.example.recipebookappandorid.model.Recipe
+import com.example.recipebookappandorid.util.IngredientsCodec
 import com.example.recipebookappandorid.viewmodel.RecipeViewModel
 
 class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
@@ -36,7 +39,7 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         binding.tvPrepTime.text = "Prep time: ${args.prepTime}"
         binding.tvDifficulty.text = "Difficulty: ${args.difficulty}"
         binding.tvCategory.text = "Category: ${args.category}"
-        binding.tvIngredients.text = args.ingredients
+        renderIngredients(args.ingredients)
         binding.tvSteps.text = args.steps
         binding.tvNotes.text = args.notes
         binding.btnImportRecipe.visibility = if (args.isRemote) View.VISIBLE else View.GONE
@@ -111,5 +114,42 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun renderIngredients(ingredientsValue: String) {
+        binding.layoutIngredients.removeAllViews()
+
+        val items = IngredientsCodec.decode(ingredientsValue)
+        if (items.isEmpty()) {
+            val fallback = ItemIngredientDisplayBinding.inflate(
+                LayoutInflater.from(requireContext()),
+                binding.layoutIngredients,
+                false
+            )
+            fallback.tvIngredientQuantity.text = ""
+            fallback.tvIngredientQuantity.visibility = View.GONE
+            fallback.tvIngredientName.text = IngredientsCodec.toDisplayText(ingredientsValue)
+            binding.layoutIngredients.addView(fallback.root)
+            return
+        }
+
+        items.forEach { ingredient ->
+            val itemBinding = ItemIngredientDisplayBinding.inflate(
+                LayoutInflater.from(requireContext()),
+                binding.layoutIngredients,
+                false
+            )
+
+            val quantityText = listOf(ingredient.quantity, ingredient.unit)
+                .filter { it.isNotBlank() }
+                .joinToString(" ")
+
+            itemBinding.tvIngredientQuantity.text = quantityText
+            itemBinding.tvIngredientQuantity.visibility =
+                if (quantityText.isBlank()) View.GONE else View.VISIBLE
+            itemBinding.tvIngredientName.text = ingredient.name
+
+            binding.layoutIngredients.addView(itemBinding.root)
+        }
     }
 }

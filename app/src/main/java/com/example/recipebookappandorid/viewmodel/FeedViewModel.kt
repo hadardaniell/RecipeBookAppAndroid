@@ -11,6 +11,7 @@ import com.example.recipebookappandorid.model.RecipeSection
 import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.MealRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
+import com.example.recipebookappandorid.validation.FeedRecipeFilter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -134,19 +135,7 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
         query: String,
         category: String?
     ): List<Recipe> {
-        return recipes.filter { recipe ->
-            val matchesQuery =
-                query.isBlank() ||
-                    recipe.title.contains(query, ignoreCase = true) ||
-                    recipe.category.contains(query, ignoreCase = true) ||
-                    recipe.ingredients.contains(query, ignoreCase = true)
-
-            val matchesCategory =
-                category.isNullOrBlank() ||
-                    recipe.category.equals(category, ignoreCase = true)
-
-            matchesQuery && matchesCategory
-        }
+        return FeedRecipeFilter.filter(recipes, query, category)
     }
 
     private fun buildSections(recipes: List<Recipe>): List<RecipeSection> {
