@@ -1,7 +1,6 @@
 package com.example.recipebookappandorid.viewmodel
 
 import android.app.Application
-import android.util.Patterns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.User
 import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.UserRepository
+import com.example.recipebookappandorid.validation.AuthFormValidator
 import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -48,25 +48,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _passwordError.value = null
         _loginError.value = null
 
-        var isValid = true
-
-        if (email.isBlank()) {
-            _emailError.value = "Email is required"
-            isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailError.value = "Invalid email"
-            isValid = false
-        }
-
-        if (password.isBlank()) {
-            _passwordError.value = "Password is required"
-            isValid = false
-        } else if (password.length < 6) {
-            _passwordError.value = "Password must be at least 6 characters"
-            isValid = false
-        }
-
-        if (!isValid) return
+        val validation = AuthFormValidator.validateLogin(email, password)
+        _emailError.value = validation.emailError
+        _passwordError.value = validation.passwordError
+        if (!validation.isValid) return
 
         _loading.value = true
 
@@ -106,38 +91,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _confirmPasswordError.value = null
         _registerError.value = null
 
-        var isValid = true
-
-        if (name.isBlank()) {
-            _nameError.value = "Name is required"
-            isValid = false
-        }
-
-        if (email.isBlank()) {
-            _emailError.value = "Email is required"
-            isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailError.value = "Invalid email"
-            isValid = false
-        }
-
-        if (password.isBlank()) {
-            _passwordError.value = "Password is required"
-            isValid = false
-        } else if (password.length < 6) {
-            _passwordError.value = "Password must be at least 6 characters"
-            isValid = false
-        }
-
-        if (confirmPassword.isBlank()) {
-            _confirmPasswordError.value = "Please confirm password"
-            isValid = false
-        } else if (password != confirmPassword) {
-            _confirmPasswordError.value = "Passwords do not match"
-            isValid = false
-        }
-
-        if (!isValid) return
+        val validation = AuthFormValidator.validateRegister(name, email, password, confirmPassword)
+        _nameError.value = validation.nameError
+        _emailError.value = validation.emailError
+        _passwordError.value = validation.passwordError
+        _confirmPasswordError.value = validation.confirmPasswordError
+        if (!validation.isValid) return
 
         _loading.value = true
 

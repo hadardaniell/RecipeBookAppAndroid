@@ -3,17 +3,17 @@
 
     <item
         android:id="@+id/feedFragment"
-        android:icon="@android:drawable/ic_menu_view"
+        android:icon="@drawable/ic_nav_discover"
         android:title="Discover" />
 
     <item
         android:id="@+id/addRecipeFragment"
-        android:icon="@android:drawable/ic_input_add"
+        android:icon="@drawable/ic_nav_create"
         android:title="Create" />
 
     <item
         android:id="@+id/profileFragment"
-        android:icon="@android:drawable/ic_menu_myplaces"
+        android:icon="@drawable/ic_nav_profile"
         android:title="Profile" />
 
 </menu>

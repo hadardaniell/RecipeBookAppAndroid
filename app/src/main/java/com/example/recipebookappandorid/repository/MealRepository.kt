@@ -3,6 +3,7 @@ package com.example.recipebookappandorid.repository
 import com.example.recipebookappandorid.data.remote.RetrofitClient
 import com.example.recipebookappandorid.data.remote.dto.MealDto
 import com.example.recipebookappandorid.model.Recipe
+import com.example.recipebookappandorid.util.IngredientsCodec
 
 class MealRepository {
 
@@ -53,16 +54,19 @@ class MealRepository {
         val title = strMeal?.trim().orEmpty()
         if (title.isBlank()) return null
 
-        val ingredientLines = ingredientPairs()
+        val ingredientItems = ingredientPairs()
             .mapNotNull { (ingredient, measure) ->
                 val ingredientText = ingredient?.trim().orEmpty()
                 if (ingredientText.isBlank()) {
                     null
                 } else {
-                    listOf(measure?.trim().orEmpty(), ingredientText)
-                        .filter { it.isNotBlank() }
-                        .joinToString(" ")
-                        .trim()
+                    val measureText = measure?.trim().orEmpty()
+                    val parts = measureText.split(" ", limit = 2)
+                    IngredientsCodec.fromNameQuantityUnit(
+                        name = ingredientText,
+                        quantity = parts.firstOrNull().orEmpty(),
+                        unit = parts.getOrNull(1).orEmpty()
+                    )
                 }
             }
 
@@ -74,7 +78,7 @@ class MealRepository {
             prepTime = "N/A",
             difficulty = "N/A",
             category = strCategory?.takeIf { it.isNotBlank() } ?: "Imported",
-            ingredients = ingredientLines.joinToString("\n"),
+            ingredients = IngredientsCodec.encode(ingredientItems),
             steps = strInstructions.orEmpty(),
             notes = strArea?.takeIf { it.isNotBlank() }?.let { "Cuisine: $it" }.orEmpty(),
             authorId = "themealdb",

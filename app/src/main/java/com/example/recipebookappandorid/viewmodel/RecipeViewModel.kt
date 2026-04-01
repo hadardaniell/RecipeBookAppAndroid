@@ -5,10 +5,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.recipebookappandorid.model.IngredientItem
 import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
 import com.example.recipebookappandorid.repository.UserRepository
+import com.example.recipebookappandorid.util.IngredientsCodec
+import com.example.recipebookappandorid.validation.RecipeFormValidator
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -60,7 +63,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         prepTime: String,
         difficulty: String,
         category: String,
-        ingredients: String,
+        ingredients: List<IngredientItem>,
         steps: String,
         notes: String
     ) {
@@ -74,44 +77,25 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         _saveError.value = null
         _savedRecipe.value = null
 
-        var isValid = true
+        val validation = RecipeFormValidator.validate(
+            title = title,
+            description = description,
+            prepTime = prepTime,
+            difficulty = difficulty,
+            category = category,
+            ingredients = ingredients,
+            steps = steps
+        )
+        _titleError.value = validation.titleError
+        _descriptionError.value = validation.descriptionError
+        _prepTimeError.value = validation.prepTimeError
+        _difficultyError.value = validation.difficultyError
+        _categoryError.value = validation.categoryError
+        _ingredientsError.value = validation.ingredientsError
+        _stepsError.value = validation.stepsError
+        if (!validation.isValid) return
 
-        if (title.isBlank()) {
-            _titleError.value = "Title is required"
-            isValid = false
-        }
-
-        if (description.isBlank()) {
-            _descriptionError.value = "Description is required"
-            isValid = false
-        }
-
-        if (prepTime.isBlank()) {
-            _prepTimeError.value = "Prep time is required"
-            isValid = false
-        }
-
-        if (difficulty.isBlank()) {
-            _difficultyError.value = "Difficulty is required"
-            isValid = false
-        }
-
-        if (category.isBlank()) {
-            _categoryError.value = "Category is required"
-            isValid = false
-        }
-
-        if (ingredients.isBlank()) {
-            _ingredientsError.value = "Ingredients are required"
-            isValid = false
-        }
-
-        if (steps.isBlank()) {
-            _stepsError.value = "Preparation steps are required"
-            isValid = false
-        }
-
-        if (!isValid) return
+        val encodedIngredients = IngredientsCodec.encode(ingredients)
 
         val firebaseUser = authRepository.getCurrentUser()
         if (firebaseUser == null) {
@@ -131,7 +115,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 prepTime = prepTime,
                 difficulty = difficulty,
                 category = category,
-                ingredients = ingredients,
+                ingredients = encodedIngredients,
                 steps = steps,
                 notes = notes,
                 authorId = uid,
@@ -190,18 +174,45 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         prepTime: String,
         difficulty: String,
         category: String,
-        ingredients: String,
+        ingredients: List<IngredientItem>,
         steps: String,
         notes: String
     ) {
         _saveError.value = null
         _savedRecipe.value = null
+        _titleError.value = null
+        _descriptionError.value = null
+        _prepTimeError.value = null
+        _difficultyError.value = null
+        _categoryError.value = null
+        _ingredientsError.value = null
+        _stepsError.value = null
+
+        val validation = RecipeFormValidator.validate(
+            title = title,
+            description = description,
+            prepTime = prepTime,
+            difficulty = difficulty,
+            category = category,
+            ingredients = ingredients,
+            steps = steps
+        )
+        _titleError.value = validation.titleError
+        _descriptionError.value = validation.descriptionError
+        _prepTimeError.value = validation.prepTimeError
+        _difficultyError.value = validation.difficultyError
+        _categoryError.value = validation.categoryError
+        _ingredientsError.value = validation.ingredientsError
+        _stepsError.value = validation.stepsError
+        if (!validation.isValid) return
 
         val firebaseUser = authRepository.getCurrentUser()
         if (firebaseUser == null) {
             _saveError.value = "You must be logged in to update a recipe"
             return
         }
+
+        val encodedIngredients = IngredientsCodec.encode(ingredients)
 
         viewModelScope.launch {
             val currentUser = userRepository.getUser(firebaseUser.uid)
@@ -213,7 +224,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 prepTime = prepTime,
                 difficulty = difficulty,
                 category = category,
-                ingredients = ingredients,
+                ingredients = encodedIngredients,
                 steps = steps,
                 notes = notes,
                 authorId = firebaseUser.uid,

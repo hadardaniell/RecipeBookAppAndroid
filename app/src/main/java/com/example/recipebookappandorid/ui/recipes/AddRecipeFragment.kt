@@ -1,13 +1,17 @@
 package com.example.recipebookappandorid.ui.recipes
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.example.recipebookappandorid.databinding.ItemIngredientInputBinding
+import com.example.recipebookappandorid.model.IngredientItem
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentAddRecipeBinding
+import com.example.recipebookappandorid.util.IngredientsCodec
 import com.example.recipebookappandorid.viewmodel.RecipeViewModel
 import android.widget.ArrayAdapter
 
@@ -17,6 +21,7 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
     private val binding get() = _binding!!
 
     private val viewModel: RecipeViewModel by viewModels()
+    private val ingredientRows = mutableListOf<ItemIngredientInputBinding>()
 
     private fun setupDropdowns() {
         val prepTimes = listOf(
@@ -65,7 +70,13 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         val args = AddRecipeFragmentArgs.fromBundle(requireArguments())
 
         setupDropdowns()
+        binding.btnAddIngredient.setOnClickListener {
+            addIngredientRow()
+        }
         populateForEdit(args)
+        if (ingredientRows.isEmpty()) {
+            addIngredientRow()
+        }
 
         binding.btnSaveRecipe.setOnClickListener {
             val title = binding.etTitle.text.toString().trim()
@@ -73,7 +84,7 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
             val prepTime = binding.etPrepTime.text.toString().trim()
             val difficulty = binding.etDifficulty.text.toString().trim()
             val category = binding.etCategory.text.toString().trim()
-            val ingredients = binding.etIngredients.text.toString().trim()
+            val ingredients = collectIngredients()
             val steps = binding.etSteps.text.toString().trim()
             val notes = binding.etNotes.text.toString().trim()
 
@@ -129,7 +140,8 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         }
 
         viewModel.ingredientsError.observe(viewLifecycleOwner) { error ->
-            binding.ingredientsInputLayout.error = error
+            binding.tvIngredientsError.text = error
+            binding.tvIngredientsError.visibility = if (error.isNullOrBlank()) View.GONE else View.VISIBLE
         }
 
         viewModel.stepsError.observe(viewLifecycleOwner) { error ->
@@ -179,14 +191,52 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         binding.etPrepTime.setText(args.prepTime, false)
         binding.etDifficulty.setText(args.difficulty, false)
         binding.etCategory.setText(args.category, false)
-        binding.etIngredients.setText(args.ingredients)
+        IngredientsCodec.decode(args.ingredients).forEach { ingredient ->
+            addIngredientRow(ingredient)
+        }
         binding.etSteps.setText(args.steps)
         binding.etNotes.setText(args.notes)
         binding.btnSaveRecipe.text = "Save Changes"
     }
 
+    private fun addIngredientRow(ingredient: IngredientItem = IngredientItem()) {
+        val rowBinding = ItemIngredientInputBinding.inflate(
+            LayoutInflater.from(requireContext()),
+            binding.ingredientsContainer,
+            false
+        )
+
+        rowBinding.etIngredientName.setText(ingredient.name)
+        rowBinding.etIngredientQuantity.setText(ingredient.quantity)
+        rowBinding.etIngredientUnit.setText(ingredient.unit)
+        rowBinding.btnRemoveIngredient.setOnClickListener {
+            if (ingredientRows.size == 1) {
+                rowBinding.etIngredientName.text = null
+                rowBinding.etIngredientQuantity.text = null
+                rowBinding.etIngredientUnit.text = null
+            } else {
+                binding.ingredientsContainer.removeView(rowBinding.root)
+                ingredientRows.remove(rowBinding)
+            }
+        }
+
+        ingredientRows.add(rowBinding)
+        binding.ingredientsContainer.addView(rowBinding.root)
+    }
+
+    private fun collectIngredients(): List<IngredientItem> {
+        return ingredientRows.map {
+            IngredientsCodec.fromNameQuantityUnit(
+                name = it.etIngredientName.text?.toString().orEmpty(),
+                quantity = it.etIngredientQuantity.text?.toString().orEmpty(),
+                unit = it.etIngredientUnit.text?.toString().orEmpty()
+            )
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        ingredientRows.clear()
         _binding = null
     }
 }
