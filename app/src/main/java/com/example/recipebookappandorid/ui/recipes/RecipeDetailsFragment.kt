@@ -27,8 +27,8 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
 
         Glide.with(binding.ivRecipeImage)
             .load(args.imageUrl.ifBlank { null })
-            .placeholder(R.drawable.ic_launcher_background)
-            .error(R.drawable.ic_launcher_background)
+            .placeholder(R.drawable.ic_recipe_placeholder)
+            .error(R.drawable.ic_recipe_placeholder)
             .into(binding.ivRecipeImage)
 
         binding.tvRecipeTitle.text = args.title

@@ -2,6 +2,7 @@ package com.example.recipebookappandorid.ui.feed
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -92,6 +93,22 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 text = category
                 isCheckable = true
                 isChecked = selectedChip == category
+                chipBackgroundColor = ContextCompat.getColorStateList(
+                    requireContext(),
+                    if (isChecked) R.color.navy_500 else android.R.color.transparent
+                )
+                setTextColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        if (isChecked) R.color.white else R.color.navy_700
+                    )
+                )
+                chipStrokeWidth = resources.displayMetrics.density
+                chipStrokeColor = ContextCompat.getColorStateList(requireContext(), R.color.stroke_soft)
+                background = ContextCompat.getDrawable(
+                    requireContext(),
+                    if (isChecked) R.drawable.bg_chip_active else R.drawable.bg_chip_idle
+                )
                 setOnClickListener { toggleCategory(category) }
             }
             binding.chipGroupCategories.addView(chip)

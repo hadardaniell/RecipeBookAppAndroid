@@ -2,18 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/profileFragment"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="Profile" />
+        android:id="@+id/feedFragment"
+        android:icon="@android:drawable/ic_menu_view"
+        android:title="Discover" />
 
     <item
         android:id="@+id/addRecipeFragment"
         android:icon="@android:drawable/ic_input_add"
-        android:title="Add" />
+        android:title="Create" />
 
     <item
-        android:id="@+id/feedFragment"
-        android:icon="@android:drawable/ic_menu_view"
-        android:title="Feed" />
+        android:id="@+id/profileFragment"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Profile" />
 
 </menu>

@@ -2,17 +2,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="20dp"
-    android:orientation="vertical">
+    android:layout_marginBottom="28dp"
+    android:background="@drawable/bg_soft_card"
+    android:orientation="vertical"
+    android:padding="18dp">
 
     <TextView
         android:id="@+id/tvSectionTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="14dp"
+        android:fontFamily="serif"
         android:text="Section title"
-        android:textColor="@android:color/black"
-        android:textSize="20sp"
+        android:textColor="@color/ink_900"
+        android:textSize="22sp"
         android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
