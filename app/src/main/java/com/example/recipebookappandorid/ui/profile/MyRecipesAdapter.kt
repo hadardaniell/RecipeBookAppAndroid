@@ -3,6 +3,8 @@ package com.example.recipebookappandorid.ui.profile
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.ItemMyRecipeBinding
 import com.example.recipebookappandorid.model.Recipe
 
@@ -31,6 +33,13 @@ class MyRecipesAdapter(
             .filter { it.isNotBlank() }
             .joinToString(" - ")
         holder.binding.tvRecipeDescription.text = recipe.description.ifBlank { recipe.notes }
+
+        Glide.with(holder.binding.ivRecipeImage)
+            .load(recipe.imageUrl.ifBlank { null })
+            .placeholder(R.drawable.ic_recipe_placeholder)
+            .error(R.drawable.ic_recipe_placeholder)
+            .into(holder.binding.ivRecipeImage)
+
         holder.itemView.setOnClickListener { onRecipeClick(recipe) }
     }
 

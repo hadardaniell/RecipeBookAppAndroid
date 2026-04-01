@@ -1,32 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/bg_app_gradient"
+    android:padding="20dp">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tvPageTitle"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:fontFamily="serif"
         android:text="My Recipe Book"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textColor="@color/ink_900"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvMyRecipesEmpty"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="18dp"
+        android:background="@drawable/bg_surface_card"
         android:gravity="center"
+        android:padding="24dp"
         android:text="No recipes yet"
+        android:textColor="@color/ink_700"
         android:textSize="16sp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvPageTitle" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMyRecipes"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_weight="1" />
+        android:layout_marginTop="18dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvPageTitle" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

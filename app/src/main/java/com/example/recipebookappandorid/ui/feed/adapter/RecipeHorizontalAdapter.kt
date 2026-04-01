@@ -35,8 +35,8 @@ class RecipeHorizontalAdapter(
 
         Glide.with(holder.binding.ivRecipeImage)
             .load(recipe.imageUrl.ifBlank { null })
-            .placeholder(R.mipmap.ic_launcher)
-            .error(R.mipmap.ic_launcher)
+            .placeholder(R.drawable.ic_recipe_placeholder)
+            .error(R.drawable.ic_recipe_placeholder)
             .into(holder.binding.ivRecipeImage)
 
         holder.itemView.setOnClickListener {
