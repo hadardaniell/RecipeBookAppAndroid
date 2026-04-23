@@ -1,12 +1,14 @@
 package com.example.recipebookappandorid.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.User
 import com.example.recipebookappandorid.repository.AuthRepository
+import com.example.recipebookappandorid.repository.StorageRepository
 import com.example.recipebookappandorid.repository.UserRepository
 import kotlinx.coroutines.launch
 
@@ -14,6 +16,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository(application)
+    private val storageRepository = StorageRepository()
 
     private val _user = MutableLiveData<User?>()
     val user: LiveData<User?> = _user
@@ -23,6 +26,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val _nameError = MutableLiveData<String?>()
     val nameError: LiveData<String?> = _nameError
+
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean> = _isLoading
 
     fun loadCurrentUser() {
         val firebaseUser = authRepository.getCurrentUser() ?: return
@@ -38,16 +44,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     uid = uid,
                     name = "",
                     email = firebaseUser.email ?: "",
-                    profileImageUrl = firebaseUser.photoUrl?.toString() ?: ""
+                    profileImageUrl = ""
                 )
-
                 userRepository.saveUser(fallbackUser)
                 _user.postValue(fallbackUser)
             }
         }
     }
 
-    fun updateProfile(name: String) {
+    fun updateProfile(name: String, imageUri: Uri?) {
         _nameError.value = null
 
         val current = _user.value ?: return
@@ -57,12 +62,28 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             return
         }
 
-        val updatedUser = current.copy(name = name)
-
         viewModelScope.launch {
-            userRepository.updateUser(updatedUser)
-            _user.postValue(updatedUser)
-            _saveSuccess.postValue(true)
+            _isLoading.postValue(true)
+            try {
+                var imageUrl = current.profileImageUrl
+                
+                // If a new image was selected, upload it first
+                if (imageUri != null) {
+                    val uploadedUrl = storageRepository.uploadProfileImage(imageUri)
+                    if (uploadedUrl != null) {
+                        imageUrl = uploadedUrl
+                    }
+                }
+
+                val updatedUser = current.copy(name = name, profileImageUrl = imageUrl)
+                userRepository.updateUser(updatedUser)
+                _user.postValue(updatedUser)
+                _saveSuccess.postValue(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.postValue(false)
+            }
         }
     }
 }

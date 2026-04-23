@@ -5,6 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentProfileBinding
 import com.example.recipebookappandorid.viewmodel.AuthViewModel
@@ -59,9 +60,17 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             if (user != null) {
                 binding.tvName.text = user.name
                 binding.tvEmail.text = user.email
+                
+                // Load the profile image
+                Glide.with(this)
+                    .load(user.profileImageUrl.ifBlank { null })
+                    .placeholder(R.drawable.ic_recipe_placeholder)
+                    .circleCrop()
+                    .into(binding.profileImage)
             } else {
                 binding.tvName.text = "No user found"
                 binding.tvEmail.text = ""
+                binding.profileImage.setImageResource(R.drawable.ic_recipe_placeholder)
             }
         }
     }

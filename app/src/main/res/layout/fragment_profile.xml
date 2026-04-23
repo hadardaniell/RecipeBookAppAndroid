@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_app_gradient"
@@ -19,13 +20,16 @@
             android:orientation="vertical"
             android:padding="28dp">
 
-            <ImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/profileImage"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:background="@drawable/bg_surface_card"
-                android:padding="16dp"
-                android:src="@drawable/ic_recipe_placeholder" />
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_recipe_placeholder"
+                app:strokeColor="@color/white"
+                app:strokeWidth="4dp"
+                app:shapeAppearanceOverlay="@style/Widget.Material3.CircularProgressIndicator" />
 
             <TextView
                 android:id="@+id/tvName"
