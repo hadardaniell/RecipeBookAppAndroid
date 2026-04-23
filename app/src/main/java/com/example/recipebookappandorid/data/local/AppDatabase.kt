@@ -8,9 +8,10 @@ import com.example.recipebookappandorid.data.local.dao.RecipeDao
 import com.example.recipebookappandorid.data.local.dao.UserDao
 import com.example.recipebookappandorid.data.local.entity.RecipeEntity
 import com.example.recipebookappandorid.data.local.entity.UserEntity
+
 @Database(
     entities = [UserEntity::class, RecipeEntity::class],
-    version = 4,
+    version = 5, // Incremented version to clear cache and prevent crash after schema change (added sharedWith)
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

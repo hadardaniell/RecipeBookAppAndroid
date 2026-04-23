@@ -18,5 +18,6 @@ data class RecipeEntity(
     val notes: String,
     val authorId: String,
     val authorName: String,
-    val createdAt: Long
+    val createdAt: Long,
+    val sharedWith: String = "" // Comma-separated list of emails
 )
