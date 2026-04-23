@@ -121,7 +121,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             },
             onError = { errorMessage ->
                 _loading.postValue(false)
-                _registerError.postValue(errorMessage)
+                if (errorMessage.contains("already registered", ignoreCase = true)) {
+                    _emailError.postValue(errorMessage)
+                } else {
+                    _registerError.postValue(errorMessage)
+                }
             }
         )
     }

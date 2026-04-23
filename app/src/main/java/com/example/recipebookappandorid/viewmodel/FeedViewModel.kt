@@ -8,7 +8,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.RecipeSection
-import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.MealRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
 import com.example.recipebookappandorid.validation.FeedRecipeFilter
@@ -19,7 +18,6 @@ import kotlinx.coroutines.launch
 class FeedViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RecipeRepository(application)
-    private val authRepository = AuthRepository()
     private val mealRepository = MealRepository()
     private val allRecipes = repository.getAllRecipes()
 
@@ -112,8 +110,6 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun syncCloudRecipes() {
-        val user = authRepository.getCurrentUser() ?: return
-
         viewModelScope.launch {
             runCatching {
                 // Fetch both my own recipes and recipes explicitly shared with my email
