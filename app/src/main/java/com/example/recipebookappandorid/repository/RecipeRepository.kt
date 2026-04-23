@@ -43,9 +43,8 @@ class RecipeRepository(context: Context) {
         recipesCollection.document(recipeId).delete().await()
     }
 
-    suspend fun syncUserRecipesFromCloud(authorId: String) {
+    suspend fun syncSharedRecipesFromCloud() {
         val snapshot = recipesCollection
-            .whereEqualTo("authorId", authorId)
             .get()
             .await()
 

@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 
 class AuthRepository {
@@ -61,6 +62,10 @@ class AuthRepository {
                     "ERROR_INVALID_EMAIL" -> "Invalid email format"
                     else -> "Invalid credentials (${exception.errorCode})"
                 }
+            }
+
+            is FirebaseAuthUserCollisionException -> {
+                "This email address is already registered"
             }
 
             is FirebaseAuthException -> {
