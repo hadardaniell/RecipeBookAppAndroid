@@ -83,6 +83,16 @@ class RecipeRepository(context: Context) {
         recipeDao.updateLastViewedAt(recipeId, viewedAt)
     }
 
+    suspend fun recordRecipeViewed(recipe: Recipe, viewedAt: Long = System.currentTimeMillis()) {
+        val existingRecipe = recipeDao.getRecipeById(recipe.id)
+        if (existingRecipe != null) {
+            recipeDao.updateLastViewedAt(recipe.id, viewedAt)
+            return
+        }
+
+        recipeDao.insertRecipe(recipe.copy(lastViewedAt = viewedAt).toEntity())
+    }
+
     suspend fun shareRecipeWithEmail(recipeId: String, email: String) {
         val normalizedEmail = email.trim().lowercase()
         recipesCollection.document(recipeId)
@@ -122,8 +132,7 @@ class RecipeRepository(context: Context) {
             emptyList()
         }
 
-        val existingViewedTimestamps = getAllRecipes().value
-            .orEmpty()
+        val existingViewedTimestamps = recipeDao.getAllRecipesOnce()
             .associate { it.id to it.lastViewedAt }
 
         val combined = (ownRecipes + sharedByUserId + sharedByEmail)

@@ -19,6 +19,7 @@ class MyRecipesViewModel(application: Application) : AndroidViewModel(applicatio
     private val currentUserId = authRepository.getCurrentUser()?.uid.orEmpty()
     private val currentUserEmail = authRepository.getCurrentUser()?.email.orEmpty()
     private val allRecipes = recipeRepository.getAllRecipes()
+    private val allRecentlyViewed = recipeRepository.getRecentlyViewedRecipes()
     private val allBooks = sharedRecipeBookRepository.getCachedBooks()
 
     val myRecipes: LiveData<List<Recipe>> = MediatorLiveData<List<Recipe>>().apply {
@@ -37,6 +38,27 @@ class MyRecipesViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         addSource(allRecipes) { refresh() }
+        addSource(allBooks) { refresh() }
+    }
+
+    val recentlyViewedRecipes: LiveData<List<Recipe>> = MediatorLiveData<List<Recipe>>().apply {
+        fun refresh() {
+            val privateBookIds = allBooks.value.orEmpty()
+                .filter { it.`private` && it.ownerId == currentUserId }
+                .map { it.id }
+                .toSet()
+
+            value = allRecentlyViewed.value.orEmpty()
+                .filter { recipe ->
+                    recipe.authorId == currentUserId ||
+                        recipe.sharedWithUserIds.contains(currentUserId) ||
+                        privateBookIds.contains(recipe.sharedBookId)
+                }
+                .distinctBy { it.id }
+                .take(5)
+        }
+
+        addSource(allRecentlyViewed) { refresh() }
         addSource(allBooks) { refresh() }
     }
 

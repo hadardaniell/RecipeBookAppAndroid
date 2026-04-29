@@ -25,7 +25,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository(application)
     private val sharedRecipeBookRepository = SharedRecipeBookRepository(application)
-    private val storageRepository = StorageRepository()
+    private val storageRepository = StorageRepository(application)
 
     private val _titleError = MutableLiveData<String?>()
     val titleError: LiveData<String?> = _titleError

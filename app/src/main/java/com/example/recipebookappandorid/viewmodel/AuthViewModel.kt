@@ -53,10 +53,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _passwordError.value = validation.passwordError
         if (!validation.isValid) return
 
+        val normalizedEmail = email.trim().lowercase()
         _loading.value = true
 
         authRepository.login(
-            email = email,
+            email = normalizedEmail,
             password = password,
             onSuccess = {
                 val firebaseUser = authRepository.getCurrentUser()
@@ -65,14 +66,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 viewModelScope.launch {
                     val existingUser = if (uid.isNotEmpty()) userRepository.getUser(uid) else null
 
-                    val user = User(
-                        uid = uid,
-                        name = existingUser?.name ?: firebaseUser?.displayName.orEmpty(),
-                        email = firebaseUser?.email?.trim()?.lowercase() ?: email.trim().lowercase(),
-                        profileImageUrl = existingUser?.profileImageUrl ?: ""
-                    )
+                    if (uid.isNotEmpty() && existingUser == null) {
+                        val user = User(
+                            uid = uid,
+                            name = firebaseUser?.displayName.orEmpty(),
+                            email = firebaseUser?.email?.trim()?.lowercase() ?: normalizedEmail,
+                            profileImageUrl = ""
+                        )
+                        userRepository.saveUser(user)
+                    }
 
-                    userRepository.saveUser(user)
                     _loading.postValue(false)
                     _loginSuccess.postValue(true)
                 }

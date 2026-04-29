@@ -37,6 +37,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private val sharedBooksViewModel: SharedBooksViewModel by viewModels()
 
     private lateinit var myRecipesAdapter: MyRecipesAdapter
+    private lateinit var sharedRecipesAdapter: MyRecipesAdapter
     private lateinit var booksAdapter: SharedBooksAdapter
     private lateinit var invitesAdapter: SharedInvitesAdapter
 
@@ -102,6 +103,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             binding.tvSharedBooksEmpty.visibility = if (books.isEmpty()) View.VISIBLE else View.GONE
         }
 
+        sharedBooksViewModel.sharedRecipes.observe(viewLifecycleOwner) { recipes ->
+            sharedRecipesAdapter.submitList(recipes)
+            binding.tvSharedRecipesEmpty.visibility = if (recipes.isEmpty()) View.VISIBLE else View.GONE
+        }
+
         sharedBooksViewModel.invites.observe(viewLifecycleOwner) { invites ->
             invitesAdapter.submitList(invites)
             binding.tvInvitesEmpty.visibility = if (invites.isEmpty()) View.VISIBLE else View.GONE
@@ -136,6 +142,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         myRecipesAdapter.setRemovalEnabled(true)
         binding.rvMyRecipes.layoutManager = LinearLayoutManager(requireContext())
         binding.rvMyRecipes.adapter = myRecipesAdapter
+
+        sharedRecipesAdapter = MyRecipesAdapter(::openRecipe)
+        binding.rvSharedRecipes.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvSharedRecipes.adapter = sharedRecipesAdapter
 
         booksAdapter = SharedBooksAdapter(::openBook)
         binding.rvSharedBooks.layoutManager = LinearLayoutManager(requireContext())

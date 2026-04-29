@@ -97,6 +97,14 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun recordRecipeViewed(recipe: Recipe) {
+        viewModelScope.launch {
+            runCatching {
+                repository.recordRecipeViewed(recipe)
+            }
+        }
+    }
+
     private fun refreshSections() {
         val newSections = buildSections(
             filterRecipes(
@@ -145,19 +153,17 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun buildSections(recipes: List<Recipe>): List<RecipeSection> {
-        if (recipes.isEmpty()) return emptyList()
-
         val currentUser = authRepository.getCurrentUser()
         val currentUserId = currentUser?.uid.orEmpty()
         val currentUserEmail = currentUser?.email.orEmpty().lowercase()
         val sections = mutableListOf<RecipeSection>()
-        val recentlyViewed = recentlyViewedRecipes.value.orEmpty()
-            .filter { viewedRecipe -> recipes.any { it.id == viewedRecipe.id } }
-            .take(10)
+        val recentlyViewed = recentlyViewedRecipes.value.orEmpty().take(10)
 
         if (recentlyViewed.isNotEmpty() && currentQuery.isBlank() && selectedCategory == null) {
             sections.add(RecipeSection(title = "Recently viewed", recipes = recentlyViewed))
         }
+
+        if (recipes.isEmpty()) return sections
 
         val sharedWithMe = recipes.filter { recipe ->
             recipe.authorId != currentUserId &&
