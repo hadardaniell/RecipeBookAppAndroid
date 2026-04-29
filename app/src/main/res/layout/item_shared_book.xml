@@ -20,9 +20,10 @@
             android:id="@+id/tvBookName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
             android:text="Family Dinners"
             android:textColor="@color/ink_900"
-            android:textSize="20sp"
+            android:textSize="19sp"
             android:textStyle="bold" />
 
         <TextView
@@ -34,20 +35,34 @@
             android:textColor="@color/ink_700"
             android:textSize="14sp" />
 
-        <TextView
+        <com.google.android.material.chip.Chip
             android:id="@+id/tvBookMembers"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="28dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_meta_pill"
-            android:paddingStart="12dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="8dp"
+            android:checkable="false"
+            android:clickable="false"
+            android:focusable="false"
+            android:minHeight="28dp"
             android:text="3 members"
-            android:textColor="@color/navy_700"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            app:chipBackgroundColor="@color/navy_500"
+            app:chipCornerRadius="14dp"
+            app:chipEndPadding="10dp"
+            app:chipMinHeight="28dp"
+            app:chipStartPadding="10dp"
+            app:chipStrokeWidth="0dp"
+            app:closeIconVisible="false"
+            app:ensureMinTouchTargetSize="false"
+            app:hideMotionSpec="@null"
+            app:iconEndPadding="0dp"
+            app:iconStartPadding="0dp"
+            app:rippleColor="@android:color/transparent"
+            app:showMotionSpec="@null"
+            app:textEndPadding="0dp"
+            app:textStartPadding="0dp" />
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>
