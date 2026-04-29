@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="cream_50">#FFF8F1</color>
-    <color name="cream_100">#FFF2DE</color>
-    <color name="cream_200">#F7E6CB</color>
-    <color name="navy_500">#1E4ED8</color>
-    <color name="navy_700">#14379E</color>
-    <color name="navy_900">#10244D</color>
-    <color name="ink_900">#172033</color>
-    <color name="ink_700">#46506A</color>
-    <color name="ink_500">#7A8298</color>
+    <color name="cream_50">#FFF9F2</color>
+    <color name="cream_100">#FFF1E3</color>
+    <color name="cream_200">#FFE4CC</color>
+    <color name="navy_500">#22A9E0</color>
+    <color name="navy_700">#1C8FC0</color>
+    <color name="navy_900">#11414E</color>
+    <color name="ink_900">#20313B</color>
+    <color name="ink_700">#5A6A72</color>
+    <color name="ink_500">#8C979B</color>
     <color name="surface_white">#FFFFFFFF</color>
-    <color name="surface_soft">#FFFDF8</color>
-    <color name="surface_tint">#FFF3E1</color>
-    <color name="stroke_soft">#1A10244D</color>
-    <color name="stroke_strong">#33203C74</color>
+    <color name="surface_soft">#FFFFFCF7</color>
+    <color name="surface_tint">#FFFCE9D8</color>
+    <color name="stroke_soft">#1F8DA6B0</color>
+    <color name="stroke_strong">#33677F88</color>
+    <color name="accent_coral">#F48B73</color>
+    <color name="accent_gold">#F6BF59</color>
+    <color name="chip_border_sand">#F0E1D2</color>
     <color name="success">#2D7E53</color>
     <color name="danger">#B5413D</color>
     <color name="black">#FF000000</color>

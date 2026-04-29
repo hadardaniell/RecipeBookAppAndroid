@@ -64,6 +64,19 @@
         <item name="hintTextColor">@color/ink_500</item>
     </style>
 
+    <style name="Widget.RecipeBook.FilterChip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/white</item>
+        <item name="chipStrokeColor">@color/navy_500</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipCornerRadius">12dp</item>
+        <item name="chipMinHeight">32dp</item>
+        <item name="android:textColor">@color/navy_500</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="rippleColor">@android:color/transparent</item>
+        <item name="ensureMinTouchTargetSize">false</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <style name="ShapeAppearance.RecipeBook.Pill" parent="ShapeAppearance.Material3.Corner.Full">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">999dp</item>

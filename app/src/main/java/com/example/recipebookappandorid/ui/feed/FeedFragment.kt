@@ -89,26 +89,37 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         binding.chipGroupCategories.removeAllViews()
 
         categories.forEach { category ->
-            val chip = Chip(requireContext()).apply {
+            val chip = Chip(requireContext(), null, com.google.android.material.R.attr.chipStyle).apply {
+                setChipDrawable(
+                    com.google.android.material.chip.ChipDrawable.createFromAttributes(
+                        context,
+                        null,
+                        0,
+                        R.style.Widget_RecipeBook_FilterChip
+                    )
+                )
                 text = category
                 isCheckable = true
                 isChecked = selectedChip == category
-                chipBackgroundColor = ContextCompat.getColorStateList(
-                    requireContext(),
-                    if (isChecked) R.color.navy_500 else android.R.color.transparent
-                )
+                chipBackgroundColor = ContextCompat.getColorStateList(requireContext(), R.color.white)
                 setTextColor(
                     ContextCompat.getColor(
                         requireContext(),
-                        if (isChecked) R.color.white else R.color.navy_700
+                        if (isChecked) R.color.white else R.color.navy_500
                     )
                 )
                 chipStrokeWidth = resources.displayMetrics.density
-                chipStrokeColor = ContextCompat.getColorStateList(requireContext(), R.color.stroke_soft)
-                background = ContextCompat.getDrawable(
+                chipStrokeColor = ContextCompat.getColorStateList(
                     requireContext(),
-                    if (isChecked) R.drawable.bg_chip_active else R.drawable.bg_chip_idle
+                    if (isChecked) R.color.navy_500 else R.color.navy_500
                 )
+                chipCornerRadius = 12f * resources.displayMetrics.density
+                setCheckedIconVisible(false)
+                rippleColor = ContextCompat.getColorStateList(requireContext(), android.R.color.transparent)
+                ensureAccessibleTouchTarget(32)
+                if (isChecked) {
+                    chipBackgroundColor = ContextCompat.getColorStateList(requireContext(), R.color.navy_500)
+                }
                 setOnClickListener { toggleCategory(category) }
             }
             binding.chipGroupCategories.addView(chip)
