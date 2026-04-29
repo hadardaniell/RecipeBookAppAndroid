@@ -34,6 +34,10 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentEditProfileBinding.bind(view)
 
+        binding.btnBack.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         binding.btnSelectImage.setOnClickListener {
             imagePickerLauncher.launch("image/*")
         }
@@ -55,8 +59,13 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
                 if (selectedImageUri == null && user.profileImageUrl.isNotEmpty()) {
                     Glide.with(this)
                         .load(user.profileImageUrl)
-                        .placeholder(R.drawable.ic_recipe_placeholder)
+                        .placeholder(R.drawable.ic_profile_avatar_placeholder)
+                        .fallback(R.drawable.ic_profile_avatar_placeholder)
+                        .error(R.drawable.ic_profile_avatar_placeholder)
+                        .circleCrop()
                         .into(binding.ivProfileImage)
+                } else if (selectedImageUri == null && user.profileImageUrl.isBlank()) {
+                    binding.ivProfileImage.setImageResource(R.drawable.ic_profile_avatar_placeholder)
                 }
             }
         }

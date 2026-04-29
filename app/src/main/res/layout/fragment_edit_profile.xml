@@ -19,30 +19,62 @@
             android:orientation="vertical"
             android:padding="22dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="serif"
-                android:text="Edit Profile"
-                android:textColor="@color/ink_900"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- Profile Image Section -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnBack"
+                    style="@style/Widget.RecipeBook.SecondaryButton"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Back"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="48dp"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    app:icon="@drawable/ic_arrow_back_modern"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:fontFamily="serif"
+                    android:text="Edit Profile"
+                    android:textColor="@color/ink_900"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
             <FrameLayout
-                android:layout_width="120dp"
-                android:layout_height="120dp"
+                android:layout_width="124dp"
+                android:layout_height="124dp"
                 android:layout_gravity="center"
-                android:layout_marginTop="20dp">
+                android:layout_marginTop="28dp">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/ivProfileImage"
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_soft_card"
-                    android:padding="2dp"
-                    android:scaleType="centerCrop"
-                    app:shapeAppearanceOverlay="@style/Widget.Material3.CircularProgressIndicator" />
+                    app:cardBackgroundColor="@color/cream_100"
+                    app:cardCornerRadius="62dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/cream_200"
+                    app:strokeWidth="2dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/ivProfileImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_profile_avatar_placeholder"
+                        app:shapeAppearance="@style/ShapeAppearance.RecipeBook.Pill" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSelectImage"
@@ -50,6 +82,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_gravity="bottom|end"
+                    android:contentDescription="Select profile image"
                     android:insetLeft="0dp"
                     android:insetTop="0dp"
                     android:insetRight="0dp"
@@ -57,7 +90,8 @@
                     android:padding="0dp"
                     app:icon="@android:drawable/ic_menu_camera"
                     app:iconGravity="textStart"
-                    app:iconPadding="0dp" />
+                    app:iconPadding="0dp"
+                    app:iconSize="18dp" />
             </FrameLayout>
 
             <com.google.android.material.textfield.TextInputLayout

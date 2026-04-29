@@ -23,6 +23,10 @@ class MyRecipesFragment : Fragment(R.layout.fragment_my_recipes) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentMyRecipesBinding.bind(view)
 
+        binding.btnBack.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         recipesAdapter = MyRecipesAdapter(::openRecipe)
         binding.rvMyRecipes.layoutManager = LinearLayoutManager(requireContext())
         binding.rvMyRecipes.adapter = recipesAdapter

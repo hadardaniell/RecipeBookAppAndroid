@@ -67,8 +67,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
                     val user = User(
                         uid = uid,
-                        name = existingUser?.name ?: "",
-                        email = firebaseUser?.email ?: email,
+                        name = existingUser?.name ?: firebaseUser?.displayName.orEmpty(),
+                        email = firebaseUser?.email?.trim()?.lowercase() ?: email.trim().lowercase(),
                         profileImageUrl = existingUser?.profileImageUrl ?: ""
                     )
 
@@ -100,34 +100,44 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         _loading.value = true
 
-        authRepository.register(
-            email = email,
-            password = password,
-            onSuccess = { firebaseUser ->
-                val uid = firebaseUser?.uid.orEmpty()
-
-                val user = User(
-                    uid = uid,
-                    name = name,
-                    email = email,
-                    profileImageUrl = ""
-                )
-
-                viewModelScope.launch {
-                    userRepository.saveUser(user)
-                    _loading.postValue(false)
-                    _registerSuccess.postValue(true)
-                }
-            },
-            onError = { errorMessage ->
+        viewModelScope.launch {
+            val normalizedEmail = email.trim().lowercase()
+            val existingUser = userRepository.findUserByEmail(normalizedEmail)
+            if (existingUser != null) {
                 _loading.postValue(false)
-                if (errorMessage.contains("already registered", ignoreCase = true)) {
-                    _emailError.postValue(errorMessage)
-                } else {
-                    _registerError.postValue(errorMessage)
-                }
+                _emailError.postValue("This email address is already registered")
+                return@launch
             }
-        )
+
+            authRepository.register(
+                email = normalizedEmail,
+                password = password,
+                onSuccess = { firebaseUser ->
+                    val uid = firebaseUser?.uid.orEmpty()
+
+                    val user = User(
+                        uid = uid,
+                        name = name,
+                        email = normalizedEmail,
+                        profileImageUrl = ""
+                    )
+
+                    viewModelScope.launch {
+                        userRepository.saveUser(user)
+                        _loading.postValue(false)
+                        _registerSuccess.postValue(true)
+                    }
+                },
+                onError = { errorMessage ->
+                    _loading.postValue(false)
+                    if (errorMessage.contains("already registered", ignoreCase = true)) {
+                        _emailError.postValue(errorMessage)
+                    } else {
+                        _registerError.postValue(errorMessage)
+                    }
+                }
+            )
+        }
     }
 
     fun logout() {

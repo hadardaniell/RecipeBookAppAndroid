@@ -27,7 +27,7 @@ class SharedBooksAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val book = books[position]
         holder.binding.tvBookName.text = book.name
-        holder.binding.tvBookOwner.text = "Owner: ${book.ownerName}"
+        holder.binding.tvBookOwner.text = "Owner: ${book.ownerName.toUsernameLike()}"
         holder.binding.tvBookMembers.text = "${book.memberIds.size} members"
         holder.itemView.setOnClickListener { onBookClick(book) }
     }
@@ -38,5 +38,10 @@ class SharedBooksAdapter(
         books.clear()
         books.addAll(newBooks)
         notifyDataSetChanged()
+    }
+
+    private fun String.toUsernameLike(): String {
+        val source = substringBefore("@").trim()
+        return source.ifBlank { trim() }
     }
 }

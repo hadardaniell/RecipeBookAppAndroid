@@ -20,6 +20,7 @@ class SharedRecipeBookRepository(context: Context) {
 
     private val bookDao = AppDatabase.getInstance(context).sharedRecipeBookDao()
     private val inviteDao = AppDatabase.getInstance(context).sharedBookInviteDao()
+    private val usersCollection = FirebaseFirestore.getInstance().collection("users")
     private val booksCollection = FirebaseFirestore.getInstance().collection("shared_books")
     private val invitesCollection = FirebaseFirestore.getInstance().collection("shared_book_invites")
 
@@ -38,7 +39,9 @@ class SharedRecipeBookRepository(context: Context) {
             .get()
             .await()
 
-        val books = booksSnapshot.documents.mapNotNull { it.toObject(SharedRecipeBook::class.java) }
+        val books = booksSnapshot.documents
+            .mapNotNull { it.toObject(SharedRecipeBook::class.java) }
+            .map { enrichBookOwner(it) }
         bookDao.clearBooks()
         bookDao.insertBooks(books.map { it.toEntity() })
 
@@ -114,7 +117,11 @@ class SharedRecipeBookRepository(context: Context) {
         val cached = bookDao.getBookById(bookId)?.toModel()
         if (cached != null) return cached
 
-        return booksCollection.document(bookId).get().await().toObject(SharedRecipeBook::class.java)
+        return booksCollection.document(bookId)
+            .get()
+            .await()
+            .toObject(SharedRecipeBook::class.java)
+            ?.let { enrichBookOwner(it) }
     }
 
     suspend fun getBooksForUser(userId: String, email: String): List<SharedRecipeBook> {
@@ -231,6 +238,62 @@ class SharedRecipeBookRepository(context: Context) {
             memberEmails = memberEmails.toMutableList().also { if (it.size > index) it.removeAt(index) },
             memberRoles = memberRoles.toMutableList().also { if (it.size > index) it.removeAt(index) }
         )
+    }
+
+    private suspend fun enrichBookOwner(book: SharedRecipeBook): SharedRecipeBook {
+        val ownerDisplayName = resolveOwnerDisplayName(book)
+        if (ownerDisplayName == book.ownerName) {
+            return book
+        }
+
+        val ownerIndex = book.memberIds.indexOf(book.ownerId)
+        val updatedMemberNames = if (ownerIndex >= 0) {
+            book.memberNames.toMutableList().also { names ->
+                while (names.size <= ownerIndex) {
+                    names.add("")
+                }
+                names[ownerIndex] = ownerDisplayName
+            }
+        } else {
+            book.memberNames
+        }
+
+        return book.copy(
+            ownerName = ownerDisplayName,
+            memberNames = updatedMemberNames
+        )
+    }
+
+    private suspend fun resolveOwnerDisplayName(book: SharedRecipeBook): String {
+        val ownerByUid = book.ownerId.takeIf { it.isNotBlank() }?.let { ownerId ->
+            usersCollection.document(ownerId).get().await().toObject(User::class.java)
+        }
+        if (ownerByUid?.name?.isNotBlank() == true) {
+            return ownerByUid.name
+        }
+
+        val ownerEmail = book.ownerName.takeIf { it.contains("@") }
+            ?: book.memberEmails.getOrNull(book.memberIds.indexOf(book.ownerId).coerceAtLeast(0))
+
+        val ownerByEmail = ownerEmail
+            ?.trim()
+            ?.lowercase()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { email ->
+                usersCollection
+                    .whereEqualTo("email", email)
+                    .limit(1)
+                    .get()
+                    .await()
+                    .documents
+                    .firstOrNull()
+                    ?.toObject(User::class.java)
+            }
+
+        return ownerByEmail?.name?.takeIf { it.isNotBlank() }
+            ?: ownerByUid?.email?.substringBefore("@")
+            ?: ownerEmail?.substringBefore("@")
+            ?: book.ownerName
     }
 
     private fun SharedRecipeBook.toEntity(): SharedRecipeBookEntity {

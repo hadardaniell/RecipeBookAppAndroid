@@ -33,6 +33,10 @@ class SharedBooksFragment : Fragment(R.layout.fragment_shared_books) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSharedBooksBinding.bind(view)
 
+        binding.btnBack.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         booksAdapter = SharedBooksAdapter(::openBook)
         binding.rvSharedBooks.layoutManager = LinearLayoutManager(requireContext())
         binding.rvSharedBooks.adapter = booksAdapter

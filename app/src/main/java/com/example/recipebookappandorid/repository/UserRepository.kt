@@ -24,14 +24,32 @@ class UserRepository(context: Context) {
     }
 
     suspend fun getUser(uid: String): User? {
-        val entity = userDao.getUser(uid) ?: return null
+        val localUser = userDao.getUser(uid)?.let { entity ->
+            User(
+                uid = entity.uid,
+                name = entity.name,
+                email = entity.email,
+                profileImageUrl = entity.profileImageUrl
+            )
+        }
 
-        return User(
-            uid = entity.uid,
-            name = entity.name,
-            email = entity.email,
-            profileImageUrl = entity.profileImageUrl
-        )
+        if (localUser != null) {
+            return localUser
+        }
+
+        val remoteUser = usersCollection.document(uid).get().await().toObject(User::class.java)
+        if (remoteUser != null) {
+            userDao.insertUser(
+                UserEntity(
+                    uid = remoteUser.uid,
+                    name = remoteUser.name,
+                    email = remoteUser.email,
+                    profileImageUrl = remoteUser.profileImageUrl
+                )
+            )
+        }
+
+        return remoteUser
     }
 
     suspend fun updateUser(user: User) {
@@ -50,8 +68,9 @@ class UserRepository(context: Context) {
     }
 
     suspend fun findUserByEmail(email: String): User? {
+        val normalizedEmail = email.trim().lowercase()
         val snapshot = usersCollection
-            .whereEqualTo("email", email.trim())
+            .whereEqualTo("email", normalizedEmail)
             .limit(1)
             .get()
             .await()

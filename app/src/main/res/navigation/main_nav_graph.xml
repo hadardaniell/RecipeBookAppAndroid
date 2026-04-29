@@ -97,6 +97,14 @@
         <action
             android:id="@+id/action_profileFragment_to_sharedBooksFragment"
             app:destination="@id/sharedBooksFragment" />
+
+        <action
+            android:id="@+id/action_profileFragment_to_recipeDetailsFragment"
+            app:destination="@id/recipeDetailsFragment" />
+
+        <action
+            android:id="@+id/action_profileFragment_to_sharedBookDetailsFragment"
+            app:destination="@id/sharedBookDetailsFragment" />
     </fragment>
 
     <fragment
