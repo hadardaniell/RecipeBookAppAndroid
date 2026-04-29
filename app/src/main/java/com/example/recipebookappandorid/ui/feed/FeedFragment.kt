@@ -116,6 +116,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun openRecipe(recipe: Recipe) {
+        viewModel.recordRecipeViewed(recipe)
         val action = FeedFragmentDirections.actionFeedFragmentToRecipeDetailsFragment(
             id = recipe.id,
             description = recipe.description,

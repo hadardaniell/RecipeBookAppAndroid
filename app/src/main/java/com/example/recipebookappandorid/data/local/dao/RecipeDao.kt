@@ -23,6 +23,9 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes ORDER BY createdAt DESC")
     fun getAllRecipes(): LiveData<List<RecipeEntity>>
 
+    @Query("SELECT * FROM recipes ORDER BY createdAt DESC")
+    suspend fun getAllRecipesOnce(): List<RecipeEntity>
+
     @Query("SELECT * FROM recipes WHERE lastViewedAt > 0 ORDER BY lastViewedAt DESC LIMIT :limit")
     fun getRecentlyViewedRecipes(limit: Int = 10): LiveData<List<RecipeEntity>>
 

@@ -16,7 +16,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository(application)
-    private val storageRepository = StorageRepository()
+    private val storageRepository = StorageRepository(application)
 
     private val _user = MutableLiveData<User?>()
     val user: LiveData<User?> = _user
@@ -26,6 +26,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val _nameError = MutableLiveData<String?>()
     val nameError: LiveData<String?> = _nameError
+
+    private val _saveError = MutableLiveData<String?>()
+    val saveError: LiveData<String?> = _saveError
 
     private val _isLoading = MutableLiveData<Boolean>(false)
     val isLoading: LiveData<Boolean> = _isLoading
@@ -54,6 +57,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateProfile(name: String, imageUri: Uri?) {
         _nameError.value = null
+        _saveError.value = null
 
         val current = _user.value ?: return
 
@@ -66,13 +70,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             _isLoading.postValue(true)
             try {
                 var imageUrl = current.profileImageUrl
-                
-                // If a new image was selected, upload it first
+
                 if (imageUri != null) {
-                    val uploadedUrl = storageRepository.uploadProfileImage(imageUri)
-                    if (uploadedUrl != null) {
-                        imageUrl = uploadedUrl
-                    }
+                    imageUrl = storageRepository.uploadProfileImage(imageUri)
+                        ?: throw IllegalStateException("Failed to upload profile image")
                 }
 
                 val updatedUser = current.copy(name = name, profileImageUrl = imageUrl)
@@ -80,7 +81,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 _user.postValue(updatedUser)
                 _saveSuccess.postValue(true)
             } catch (e: Exception) {
-                e.printStackTrace()
+                _saveError.postValue(e.message ?: "Failed to update profile")
             } finally {
                 _isLoading.postValue(false)
             }

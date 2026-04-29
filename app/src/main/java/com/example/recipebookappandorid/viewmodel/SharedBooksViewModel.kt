@@ -3,14 +3,17 @@ package com.example.recipebookappandorid.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
+import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.SharedBookInvite
 import com.example.recipebookappandorid.model.SharedBookRole
 import com.example.recipebookappandorid.model.SharedRecipeBook
 import com.example.recipebookappandorid.model.User
 import com.example.recipebookappandorid.repository.AuthRepository
+import com.example.recipebookappandorid.repository.RecipeRepository
 import com.example.recipebookappandorid.repository.SharedRecipeBookRepository
 import com.example.recipebookappandorid.repository.UserRepository
 import kotlinx.coroutines.launch
@@ -19,12 +22,38 @@ class SharedBooksViewModel(application: Application) : AndroidViewModel(applicat
 
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository(application)
+    private val recipeRepository = RecipeRepository(application)
     private val sharedRecipeBookRepository = SharedRecipeBookRepository(application)
+    private val currentUserId = authRepository.getCurrentUser()?.uid.orEmpty()
+    private val currentUserEmail = authRepository.getCurrentUser()?.email.orEmpty().trim().lowercase()
+    private val allRecipes = recipeRepository.getAllRecipes()
+    private val allBooks = sharedRecipeBookRepository.getCachedBooks()
 
     val books: LiveData<List<SharedRecipeBook>> = sharedRecipeBookRepository.getCachedBooks().map { books ->
         books.filterNot { it.`private` }
     }
     val invites: LiveData<List<SharedBookInvite>> = sharedRecipeBookRepository.getCachedInvites()
+    val sharedRecipes: LiveData<List<Recipe>> = MediatorLiveData<List<Recipe>>().apply {
+        fun refresh() {
+            val sharedBookIds = allBooks.value.orEmpty()
+                .filterNot { it.`private` }
+                .map { it.id }
+                .toSet()
+
+            value = allRecipes.value.orEmpty()
+                .filter { recipe ->
+                    recipe.authorId != currentUserId &&
+                        (recipe.sharedWithUserIds.contains(currentUserId) ||
+                            recipe.sharedWith.any { it.equals(currentUserEmail, ignoreCase = true) }) &&
+                        recipe.sharedBookId !in sharedBookIds
+                }
+                .distinctBy { it.id }
+                .sortedByDescending { it.createdAt }
+        }
+
+        addSource(allRecipes) { refresh() }
+        addSource(allBooks) { refresh() }
+    }
 
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
@@ -44,6 +73,10 @@ class SharedBooksViewModel(application: Application) : AndroidViewModel(applicat
                 sharedRecipeBookRepository.syncForUser(
                     userId = firebaseUser.uid,
                     email = firebaseUser.email.orEmpty()
+                )
+                recipeRepository.syncRecipesForCurrentUser(
+                    userId = firebaseUser.uid,
+                    userEmail = firebaseUser.email.orEmpty()
                 )
             }.onFailure { exception ->
                 _message.postValue(exception.message ?: "Failed to sync shared books")

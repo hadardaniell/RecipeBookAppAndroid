@@ -5,7 +5,6 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -80,13 +79,14 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         binding.tvNotes.text = args.notes
 
         val isMyRecipe = currentUserId == args.authorId
+        val canImportToMyRecipes = !isMyRecipe && args.sharedBookId.isBlank()
         if (args.isRemote) {
             binding.btnImportRecipe.visibility = View.VISIBLE
             binding.layoutRecipeActions.visibility = View.GONE
             binding.btnEditRecipe.visibility = View.GONE
             binding.btnShareRecipe.visibility = View.GONE
         } else {
-            binding.btnImportRecipe.visibility = View.GONE
+            binding.btnImportRecipe.visibility = if (canImportToMyRecipes) View.VISIBLE else View.GONE
             binding.layoutRecipeActions.visibility = View.GONE
             binding.btnShareRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
             binding.btnEditRecipe.visibility = View.GONE
@@ -165,7 +165,9 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
 
         viewModel.importSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
-                Toast.makeText(requireContext(), "Recipe imported", Toast.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Recipe imported to your recipe book", Snackbar.LENGTH_SHORT)
+                    .setAnchorView(binding.bottomActions)
+                    .show()
                 binding.btnImportRecipe.isEnabled = false
                 binding.btnImportRecipe.text = getString(R.string.imported)
             }
@@ -177,7 +179,9 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
                     if (currentRecipe.sharedBookName.isBlank()) View.GONE else View.VISIBLE
                 binding.tvSharedBook.text =
                     getString(R.string.recipe_shared_book_format, currentRecipe.sharedBookName)
-                Toast.makeText(requireContext(), "Action completed successfully", Toast.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Done successfully", Snackbar.LENGTH_SHORT)
+                    .setAnchorView(binding.bottomActions)
+                    .show()
             }
         }
 
@@ -206,7 +210,9 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
                 if (email.isNotEmpty()) {
                     viewModel.shareRecipe(recipeId, email)
                 } else {
-                    Toast.makeText(requireContext(), "Email cannot be empty", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, "Please enter an email address", Snackbar.LENGTH_SHORT)
+                        .setAnchorView(binding.bottomActions)
+                        .show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -258,7 +264,9 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
     private fun showShareToBookDialog() {
         val firebaseUser = authRepository.getCurrentUser()
         if (firebaseUser == null) {
-            Toast.makeText(requireContext(), "You must be logged in", Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, "You need to be logged in to share recipes", Snackbar.LENGTH_SHORT)
+                .setAnchorView(binding.bottomActions)
+                .show()
             return
         }
 
@@ -271,7 +279,9 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
                 }
 
             if (books.isEmpty()) {
-                Toast.makeText(requireContext(), "No shared books available", Toast.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "You do not have any shared books available", Snackbar.LENGTH_SHORT)
+                    .setAnchorView(binding.bottomActions)
+                    .show()
                 return@launch
             }
 
