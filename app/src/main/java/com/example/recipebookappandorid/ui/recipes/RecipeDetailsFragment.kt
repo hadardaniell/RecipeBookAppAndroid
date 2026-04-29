@@ -69,10 +69,10 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
 
         binding.tvRecipeTitle.text = args.title
         binding.tvRecipeAuthor.text = getString(R.string.recipe_author_format, args.authorName)
-        binding.tvPrepTime.text = getString(R.string.recipe_prep_time_format, args.prepTime)
-        binding.tvDifficulty.text = getString(R.string.recipe_difficulty_format, args.difficulty)
-        binding.tvCategory.text = getString(R.string.recipe_category_format, args.category)
-        binding.tvSharedBook.visibility = if (args.sharedBookName.isBlank()) View.GONE else View.VISIBLE
+        bindChip(binding.tvPrepTime, args.prepTime, getString(R.string.recipe_prep_time_format, args.prepTime))
+        bindChip(binding.tvDifficulty, args.difficulty, getString(R.string.recipe_difficulty_format, args.difficulty))
+        bindChip(binding.tvCategory, args.category, getString(R.string.recipe_category_format, args.category))
+        binding.tvSharedBook.visibility = if (isMeaningfulValue(args.sharedBookName)) View.VISIBLE else View.GONE
         binding.tvSharedBook.text = getString(R.string.recipe_shared_book_format, args.sharedBookName)
         renderIngredients(args.ingredients)
         binding.tvSteps.text = args.steps
@@ -176,7 +176,7 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         viewModel.saveSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 binding.tvSharedBook.visibility =
-                    if (currentRecipe.sharedBookName.isBlank()) View.GONE else View.VISIBLE
+                    if (isMeaningfulValue(currentRecipe.sharedBookName)) View.VISIBLE else View.GONE
                 binding.tvSharedBook.text =
                     getString(R.string.recipe_shared_book_format, currentRecipe.sharedBookName)
                 Snackbar.make(binding.root, "Done successfully", Snackbar.LENGTH_SHORT)
@@ -254,7 +254,7 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
 
             itemBinding.tvIngredientQuantity.text = quantityText
             itemBinding.tvIngredientQuantity.visibility =
-                if (quantityText.isBlank()) View.GONE else View.VISIBLE
+                if (isMeaningfulValue(quantityText)) View.VISIBLE else View.GONE
             itemBinding.tvIngredientName.text = ingredient.name
 
             binding.layoutIngredients.addView(itemBinding.root)
@@ -304,5 +304,17 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
             memberIds = book.memberIds,
             role = book.roleFor(currentUserId).orEmpty()
         )
+    }
+
+    private fun bindChip(view: View, rawValue: String, text: String) {
+        view.visibility = if (isMeaningfulValue(rawValue)) View.VISIBLE else View.GONE
+        if (view is android.widget.TextView) {
+            view.text = text
+        }
+    }
+
+    private fun isMeaningfulValue(value: String): Boolean {
+        val normalized = value.trim()
+        return normalized.isNotBlank() && !normalized.equals("N/A", ignoreCase = true)
     }
 }

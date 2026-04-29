@@ -10,6 +10,7 @@ import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -77,18 +78,25 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         if (char.isLowerCase()) char.titlecase() else char.toString()
                     }
                 binding.tvName.text = user.name.ifBlank { fallbackName }
-                binding.tvUsername.text = user.toUsername()
-
-                Glide.with(this)
-                    .load(user.profileImageUrl.ifBlank { null })
-                    .placeholder(R.drawable.ic_profile_avatar_placeholder)
-                    .fallback(R.drawable.ic_profile_avatar_placeholder)
-                    .error(R.drawable.ic_profile_avatar_placeholder)
-                    .circleCrop()
-                    .into(binding.profileImage)
+                binding.tvUsername.text = user.profileEmailLabel()
+                if (user.profileImageUrl.isBlank()) {
+                    Glide.with(this).clear(binding.profileImage)
+                    binding.profileImage.scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+                    binding.profileImage.setImageResource(R.drawable.ic_profile_avatar_placeholder)
+                } else {
+                    binding.profileImage.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                    Glide.with(this)
+                        .load(user.profileImageUrl)
+                        .placeholder(R.drawable.ic_profile_avatar_placeholder)
+                        .error(R.drawable.ic_profile_avatar_placeholder)
+                        .circleCrop()
+                        .into(binding.profileImage)
+                }
             } else {
                 binding.tvName.text = "Guest"
                 binding.tvUsername.text = "@guest"
+                Glide.with(this).clear(binding.profileImage)
+                binding.profileImage.scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
                 binding.profileImage.setImageResource(R.drawable.ic_profile_avatar_placeholder)
             }
         }
@@ -140,7 +148,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private fun setupLists() {
         myRecipesAdapter = MyRecipesAdapter(::openRecipe, ::confirmRemoveRecipe)
         myRecipesAdapter.setRemovalEnabled(true)
-        binding.rvMyRecipes.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvMyRecipes.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvMyRecipes.adapter = myRecipesAdapter
 
         sharedRecipesAdapter = MyRecipesAdapter(::openRecipe)
@@ -280,13 +288,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             .show()
     }
 
-    private fun com.example.recipebookappandorid.model.User.toUsername(): String {
-        val handleSource = email.substringBefore("@").ifBlank { name }
-        val normalized = handleSource
-            .trim()
-            .replace("\\s+".toRegex(), "_")
-            .lowercase()
-        return "@${normalized.ifBlank { "chef" }}"
+    private fun com.example.recipebookappandorid.model.User.profileEmailLabel(): String {
+        val normalizedEmail = email.trim().lowercase()
+        return when {
+            normalizedEmail.isBlank() -> "@guest"
+            normalizedEmail.startsWith("@") -> normalizedEmail
+            else -> "@$normalizedEmail"
+        }
     }
 
     override fun onDestroyView() {

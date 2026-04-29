@@ -39,24 +39,24 @@
                             android:id="@+id/btnLogout"
                             android:layout_width="42dp"
                             android:layout_height="42dp"
-                            android:background="@drawable/bg_soft_card"
+                            android:background="@drawable/bg_profile_action_button"
                             android:contentDescription="Logout"
                             android:padding="10dp"
                             android:scaleType="centerInside"
                             android:src="@drawable/ic_logout_standard"
-                            android:tint="@color/navy_700" />
+                            android:tint="@color/danger" />
 
                         <androidx.appcompat.widget.AppCompatImageButton
                             android:id="@+id/btnEditProfile"
                             android:layout_width="42dp"
                             android:layout_height="42dp"
                             android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_soft_card"
+                            android:background="@drawable/bg_profile_action_button"
                             android:contentDescription="Edit profile"
                             android:padding="10dp"
                             android:scaleType="centerInside"
                             android:src="@android:drawable/ic_menu_edit"
-                            android:tint="@color/navy_700" />
+                            android:tint="@color/ink_500" />
                     </LinearLayout>
 
                     <com.google.android.material.card.MaterialCardView
@@ -65,10 +65,10 @@
                         android:layout_height="108dp"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="18dp"
-                        app:cardBackgroundColor="@color/cream_100"
+                        app:cardBackgroundColor="@color/white"
                         app:cardCornerRadius="54dp"
                         app:cardElevation="0dp"
-                        app:strokeColor="@color/cream_200"
+                        app:strokeColor="@color/navy_500"
                         app:strokeWidth="2dp">
 
                         <com.google.android.material.imageview.ShapeableImageView
@@ -86,7 +86,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="16dp"
-                        android:fontFamily="serif"
+                        android:fontFamily="sans-serif-medium"
                         android:text="Full Name"
                         android:textColor="@color/ink_900"
                         android:textSize="24sp"
@@ -98,9 +98,10 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="8dp"
+                        android:fontFamily="sans-serif-medium"
                         android:text="@username"
-                        android:textColor="@color/navy_700"
-                        android:textSize="15sp"
+                        android:textColor="@color/navy_500"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -110,9 +111,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
+            android:background="@android:color/transparent"
+            app:tabBackground="@android:color/transparent"
             app:tabIndicatorColor="@color/navy_500"
             app:tabIndicatorFullWidth="false"
-            app:tabRippleColor="@color/cream_100"
+            app:tabRippleColor="@android:color/transparent"
             app:tabSelectedTextColor="@color/navy_700"
             app:tabTextColor="@color/ink_700">
 
@@ -133,15 +136,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="serif"
-                android:text="My Recipes"
-                android:textColor="@color/ink_900"
-                android:textSize="22sp"
-                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvMyRecipesEmpty"
@@ -189,76 +183,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:fontFamily="serif"
-                android:text="Pending Invitations"
-                android:textColor="@color/ink_900"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvInvitesEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_surface_card"
-                android:gravity="center"
-                android:padding="20dp"
-                android:text="No pending invitations"
-                android:textColor="@color/ink_700"
-                android:textSize="15sp"
-                android:visibility="gone" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvInvites"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:nestedScrollingEnabled="false" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:fontFamily="serif"
-                android:text="Recipes Shared With Me"
-                android:textColor="@color/ink_900"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSharedRecipesHint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Open a shared recipe to view it in full or import it into your own recipe book."
-                android:textColor="@color/ink_700"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvSharedRecipesEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_surface_card"
-                android:gravity="center"
-                android:padding="24dp"
-                android:text="No one has shared a recipe with you yet"
-                android:textColor="@color/ink_700"
-                android:textSize="16sp"
-                android:visibility="gone" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvSharedRecipes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:nestedScrollingEnabled="false" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:fontFamily="serif"
+                android:fontFamily="sans-serif-medium"
                 android:text="Shared Recipe Books"
                 android:textColor="@color/ink_900"
                 android:textSize="22sp"
@@ -279,6 +204,66 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvSharedBooks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="Recipes Shared With Me"
+                android:textColor="@color/ink_900"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSharedRecipesEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_surface_card"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="No one has shared a recipe with you yet"
+                android:textColor="@color/ink_700"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSharedRecipes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="Pending Invitations"
+                android:textColor="@color/ink_900"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvInvitesEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_surface_card"
+                android:gravity="center"
+                android:padding="20dp"
+                android:text="No pending invitations"
+                android:textColor="@color/ink_700"
+                android:textSize="15sp"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvInvites"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"

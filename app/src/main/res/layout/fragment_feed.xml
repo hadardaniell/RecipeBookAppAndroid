@@ -10,51 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="18dp"
+        android:paddingTop="54dp"
+        android:paddingEnd="18dp"
         android:paddingBottom="120dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_blue_panel"
-            android:orientation="vertical"
-            android:padding="24dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Today's kitchen mood"
-                android:textColor="@color/cream_100"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:fontFamily="serif"
-                android:text="Find your next&#10;favorite dish"
-                android:textColor="@color/white"
-                android:textSize="32sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Browse community picks, quick dinners and save-worthy recipes."
-                android:textColor="@color/cream_100"
-                android:textSize="15sp" />
-        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.RecipeBook.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="-18dp"
-            android:elevation="4dp"
+            android:elevation="2dp"
             android:hint="Search recipes"
             app:startIconDrawable="@drawable/ic_search_modern">
 
@@ -67,7 +32,7 @@
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:scrollbars="none">
 
             <com.google.android.material.chip.ChipGroup
@@ -81,29 +46,11 @@
                 app:singleSelection="true" />
         </HorizontalScrollView>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:fontFamily="serif"
-            android:text="Discover"
-            android:textColor="@color/ink_900"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Curated sections with recipes worth trying next."
-            android:textColor="@color/ink_700"
-            android:textSize="14sp" />
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvFeedSections"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="22dp"
             android:nestedScrollingEnabled="false" />
 
         <ProgressBar

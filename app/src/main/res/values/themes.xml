@@ -6,7 +6,7 @@
         <item name="colorPrimaryContainer">@color/navy_700</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/cream_200</item>
-        <item name="colorSecondaryContainer">@color/cream_100</item>
+        <item name="colorSecondaryContainer">@color/white</item>
         <item name="colorTertiary">@color/success</item>
         <item name="colorSurface">@color/cream_50</item>
         <item name="colorSurfaceVariant">@color/surface_tint</item>
