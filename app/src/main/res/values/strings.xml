@@ -6,5 +6,6 @@
     <string name="recipe_prep_time_format">Prep time: %s</string>
     <string name="recipe_difficulty_format">Difficulty: %s</string>
     <string name="recipe_category_format">Category: %s</string>
+    <string name="recipe_shared_book_format">Shared book: %s</string>
     <string name="imported">Imported</string>
 </resources>

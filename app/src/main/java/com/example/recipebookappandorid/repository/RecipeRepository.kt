@@ -21,9 +21,7 @@ class RecipeRepository(context: Context) {
     }
 
     fun getAllRecipes(): LiveData<List<Recipe>> {
-        return recipeDao.getAllRecipes().map { list ->
-            list.map { it.toModel() }
-        }
+        return recipeDao.getAllRecipes().map { list -> list.map { it.toModel() } }
     }
 
     suspend fun getMyRecipes(authorId: String): List<Recipe> {
@@ -45,68 +43,40 @@ class RecipeRepository(context: Context) {
     }
 
     suspend fun shareRecipeWithEmail(recipeId: String, email: String) {
-        // Add the email to the sharedWith array in Firestore
-        recipesCollection.document(recipeId).update("sharedWith", FieldValue.arrayUnion(email)).await()
-        
-        // Update local room database
+        val normalizedEmail = email.trim().lowercase()
+        recipesCollection.document(recipeId)
+            .update("sharedWith", FieldValue.arrayUnion(normalizedEmail))
+            .await()
+
         val localRecipe = getRecipeById(recipeId)
-        if (localRecipe != null) {
-            val updatedList = localRecipe.sharedWith.toMutableList()
-            if (!updatedList.contains(email)) {
-                updatedList.add(email)
-                updateRecipe(localRecipe.copy(sharedWith = updatedList))
-            }
+        if (localRecipe != null && !localRecipe.sharedWith.contains(normalizedEmail)) {
+            val updated = localRecipe.copy(sharedWith = localRecipe.sharedWith + normalizedEmail)
+            recipeDao.updateRecipe(updated.toEntity())
         }
     }
 
-    suspend fun syncAllRecipesFromCloud(currentUserEmail: String) {
-        try {
-            // Get Community Recipes (You can limit this or grab all depending on your app rules. Here we fetch globally shared or something similar. 
-            // For this requirement, let's fetch recipes shared explicitly with the user, and maybe general community ones).
-            
-            // 1. Fetch recipes shared explicitly with this user's email
-            val sharedSnapshot = recipesCollection
-                .whereArrayContains("sharedWith", currentUserEmail)
+    suspend fun syncSharedRecipesFromCloud(userId: String, userEmail: String) {
+        val sharedByUserId = recipesCollection
+            .whereArrayContains("sharedWithUserIds", userId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(Recipe::class.java) }
+
+        val sharedByEmail = if (userEmail.isNotBlank()) {
+            recipesCollection
+                .whereArrayContains("sharedWith", userEmail.lowercase())
                 .get()
                 .await()
-
-            // 2. Fetch all community recipes (Optional, but let's keep it to have a populated feed)
-            val communitySnapshot = recipesCollection
-                .limit(20) // Limit to avoid massive downloads
-                .get()
-                .await()
-
-            val sharedRecipes = sharedSnapshot.documents.mapNotNull { it.toObject(Recipe::class.java) }
-            val communityRecipes = communitySnapshot.documents.mapNotNull { it.toObject(Recipe::class.java) }
-
-            val allFetched = (sharedRecipes + communityRecipes).distinctBy { it.id }
-
-            if (allFetched.isNotEmpty()) {
-                recipeDao.insertRecipes(allFetched.map { it.toEntity() })
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+                .documents
+                .mapNotNull { it.toObject(Recipe::class.java) }
+        } else {
+            emptyList()
         }
-    }
 
-    suspend fun syncUserRecipesFromCloud(authorId: String) {
-        try {
-            val snapshot = recipesCollection
-                .whereEqualTo("authorId", authorId)
-                .get()
-                .await()
-
-            val recipes = snapshot.documents.mapNotNull { document ->
-                document.toObject(Recipe::class.java)
-            }
-
-            val currentRecipes = recipeDao.getRecipesByAuthor(authorId)
-            currentRecipes.forEach { recipeDao.deleteRecipeById(it.id) }
-            
-            recipeDao.insertRecipes(recipes.map { it.toEntity() })
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        val combined = (sharedByUserId + sharedByEmail).distinctBy { it.id }
+        recipeDao.clearRecipes()
+        recipeDao.insertRecipes(combined.map { it.toEntity() })
     }
 
     private fun Recipe.toEntity(): RecipeEntity {
@@ -123,6 +93,10 @@ class RecipeRepository(context: Context) {
             notes = notes,
             authorId = authorId,
             authorName = authorName,
+            sharedBookId = sharedBookId,
+            sharedBookName = sharedBookName,
+            sharedWithUserIds = sharedWithUserIds,
+            sharedRole = sharedRole,
             createdAt = createdAt,
             sharedWith = sharedWith.joinToString(",")
         )
@@ -142,6 +116,10 @@ class RecipeRepository(context: Context) {
             notes = notes,
             authorId = authorId,
             authorName = authorName,
+            sharedBookId = sharedBookId,
+            sharedBookName = sharedBookName,
+            sharedWithUserIds = sharedWithUserIds,
+            sharedRole = sharedRole,
             createdAt = createdAt,
             sharedWith = if (sharedWith.isBlank()) emptyList() else sharedWith.split(",")
         )

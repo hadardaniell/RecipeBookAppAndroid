@@ -7,8 +7,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.IngredientItem
 import com.example.recipebookappandorid.model.Recipe
+import com.example.recipebookappandorid.model.SharedBookRole
 import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
+import com.example.recipebookappandorid.repository.SharedRecipeBookRepository
 import com.example.recipebookappandorid.repository.UserRepository
 import com.example.recipebookappandorid.util.IngredientsCodec
 import com.example.recipebookappandorid.validation.RecipeFormValidator
@@ -20,6 +22,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val recipeRepository = RecipeRepository(application)
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository(application)
+    private val sharedRecipeBookRepository = SharedRecipeBookRepository(application)
 
     private val _titleError = MutableLiveData<String?>()
     val titleError: LiveData<String?> = _titleError
@@ -65,7 +68,9 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         category: String,
         ingredients: List<IngredientItem>,
         steps: String,
-        notes: String
+        notes: String,
+        sharedBookId: String = "",
+        sharedBookName: String = ""
     ) {
         _titleError.value = null
         _descriptionError.value = null
@@ -106,6 +111,11 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch {
             val currentUser = userRepository.getUser(uid)
+            val sharedBook = if (sharedBookId.isNotBlank()) {
+                sharedRecipeBookRepository.getBookById(sharedBookId)
+            } else {
+                null
+            }
 
             val recipe = Recipe(
                 id = UUID.randomUUID().toString(),
@@ -120,6 +130,10 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 notes = notes,
                 authorId = uid,
                 authorName = currentUser?.name ?: firebaseUser.email ?: "Unknown",
+                sharedBookId = sharedBook?.id ?: sharedBookId,
+                sharedBookName = sharedBook?.name ?: sharedBookName,
+                sharedWithUserIds = sharedBook?.memberIds ?: listOf(uid),
+                sharedRole = sharedBook?.roleFor(uid) ?: SharedBookRole.OWNER,
                 createdAt = System.currentTimeMillis()
             )
 
@@ -149,6 +163,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 id = UUID.randomUUID().toString(),
                 authorId = uid,
                 authorName = currentUser?.name ?: firebaseUser.email ?: "My Recipe",
+                sharedWithUserIds = listOf(uid),
+                sharedRole = SharedBookRole.OWNER,
                 createdAt = System.currentTimeMillis()
             )
 
@@ -191,7 +207,9 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         category: String,
         ingredients: List<IngredientItem>,
         steps: String,
-        notes: String
+        notes: String,
+        sharedBookId: String,
+        sharedBookName: String
     ) {
         _saveError.value = null
         _savedRecipe.value = null
@@ -231,6 +249,11 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch {
             val currentUser = userRepository.getUser(firebaseUser.uid)
+            val sharedBook = if (sharedBookId.isNotBlank()) {
+                sharedRecipeBookRepository.getBookById(sharedBookId)
+            } else {
+                null
+            }
             val recipe = Recipe(
                 id = recipeId,
                 title = title,
@@ -244,6 +267,10 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 notes = notes,
                 authorId = firebaseUser.uid,
                 authorName = currentUser?.name ?: firebaseUser.email ?: "My Recipe",
+                sharedBookId = sharedBook?.id ?: sharedBookId,
+                sharedBookName = sharedBook?.name ?: sharedBookName,
+                sharedWithUserIds = sharedBook?.memberIds ?: listOf(firebaseUser.uid),
+                sharedRole = sharedBook?.roleFor(firebaseUser.uid) ?: SharedBookRole.OWNER,
                 createdAt = System.currentTimeMillis()
             )
 

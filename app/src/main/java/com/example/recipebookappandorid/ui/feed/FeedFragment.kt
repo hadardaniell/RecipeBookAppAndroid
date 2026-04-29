@@ -129,6 +129,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             ingredients = recipe.ingredients,
             steps = recipe.steps,
             notes = recipe.notes,
+            sharedBookId = recipe.sharedBookId,
+            sharedBookName = recipe.sharedBookName,
+            sharedWithUserIds = recipe.sharedWithUserIds.toTypedArray(),
+            sharedRole = recipe.sharedRole,
             isRemote = recipe.authorId == "themealdb"
         )
         findNavController().navigate(action)

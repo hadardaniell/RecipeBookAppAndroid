@@ -32,6 +32,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             findNavController().navigate(R.id.myRecipesFragment)
         }
 
+        binding.btnSharedBooks.setOnClickListener {
+            findNavController().navigate(R.id.sharedBooksFragment)
+        }
+
         binding.btnLogout.setOnClickListener {
             authViewModel.logout()
 

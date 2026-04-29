@@ -131,6 +131,22 @@
                     android:textColor="@color/navy_700"
                     android:textSize="12sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvSharedBook"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_meta_pill"
+                    android:paddingStart="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="8dp"
+                    android:text="Shared book: Family Dinners"
+                    android:textColor="@color/navy_700"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout
@@ -242,25 +258,39 @@
             android:id="@+id/layoutRecipeActions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:visibility="gone">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEditRecipe"
-                style="@style/Widget.RecipeBook.PrimaryButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Edit" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDeleteRecipe"
+                android:id="@+id/btnShareToBook"
                 style="@style/Widget.RecipeBook.SecondaryButton"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:text="Delete" />
+                android:text="Share To Book" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEditRecipe"
+                    style="@style/Widget.RecipeBook.PrimaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Edit" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDeleteRecipe"
+                    style="@style/Widget.RecipeBook.SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="Delete" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- New Share Button -->

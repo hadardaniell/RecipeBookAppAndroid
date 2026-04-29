@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.RecipeSection
+import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.MealRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
 import com.example.recipebookappandorid.validation.FeedRecipeFilter
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 class FeedViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RecipeRepository(application)
+    private val authRepository = AuthRepository()
     private val mealRepository = MealRepository()
     private val allRecipes = repository.getAllRecipes()
 
@@ -110,14 +112,13 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun syncCloudRecipes() {
+        val user = authRepository.getCurrentUser() ?: return
         viewModelScope.launch {
             runCatching {
-                // Fetch both my own recipes and recipes explicitly shared with my email
-                repository.syncUserRecipesFromCloud(user.uid)
-                val userEmail = user.email
-                if (!userEmail.isNullOrBlank()) {
-                    repository.syncAllRecipesFromCloud(userEmail)
-                }
+                repository.syncSharedRecipesFromCloud(
+                    userId = user.uid,
+                    userEmail = user.email.orEmpty()
+                )
             }
         }
     }
@@ -142,35 +143,30 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     private fun buildSections(recipes: List<Recipe>): List<RecipeSection> {
         if (recipes.isEmpty()) return emptyList()
 
+        val currentUser = authRepository.getCurrentUser()
+        val currentUserId = currentUser?.uid.orEmpty()
+        val currentUserEmail = currentUser?.email.orEmpty().lowercase()
         val sections = mutableListOf<RecipeSection>()
-        val currentUserEmail = authRepository.getCurrentUser()?.email ?: ""
 
-        // 1. Shared with me Section
-        val sharedWithMe = recipes.filter { it.sharedWith.contains(currentUserEmail) }
+        val sharedWithMe = recipes.filter { recipe ->
+            recipe.authorId != currentUserId &&
+                (recipe.sharedWithUserIds.contains(currentUserId) ||
+                    recipe.sharedWith.contains(currentUserEmail))
+        }
         if (sharedWithMe.isNotEmpty()) {
-            sections.add(
-                RecipeSection(
-                    title = "Shared with me",
-                    recipes = sharedWithMe
-                )
-            )
+            sections.add(RecipeSection(title = "Shared with me", recipes = sharedWithMe))
         }
 
-        // 2. Popular Now (Community Recipes)
-        val communityRecipes = recipes.filter { 
-            it.authorId != "themealdb" && it.authorId != authRepository.getCurrentUser()?.uid 
-            && !it.sharedWith.contains(currentUserEmail)
+        val communityRecipes = recipes.filter {
+            it.authorId != "themealdb" &&
+                it.authorId != currentUserId &&
+                !it.sharedWithUserIds.contains(currentUserId) &&
+                !it.sharedWith.contains(currentUserEmail)
         }
         if (communityRecipes.isNotEmpty()) {
-            sections.add(
-                RecipeSection(
-                    title = "Community Recipes",
-                    recipes = communityRecipes.take(10)
-                )
-            )
+            sections.add(RecipeSection(title = "Community Recipes", recipes = communityRecipes.take(10)))
         }
 
-        // 3. From TheMealDB
         val importedMeals = recipes.filter { it.authorId == "themealdb" }
         if (importedMeals.isNotEmpty()) {
             sections.add(
@@ -181,16 +177,20 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        // 4. Filtered Categories
+        val easyRecipes = recipes.filter { it.difficulty.equals("Easy", ignoreCase = true) }
+        if (easyRecipes.isNotEmpty()) {
+            sections.add(RecipeSection(title = "Easy to make", recipes = easyRecipes.take(10)))
+        }
+
+        val quickRecipes = recipes.filter { extractMinutes(it.prepTime) <= 30 }
+        if (quickRecipes.isNotEmpty()) {
+            sections.add(RecipeSection(title = "Ready in 30 min", recipes = quickRecipes.take(10)))
+        }
+
         recipes.groupBy { it.category.ifBlank { "Other" } }
             .forEach { (category, categoryRecipes) ->
                 if (categoryRecipes.isNotEmpty()) {
-                    sections.add(
-                        RecipeSection(
-                            title = category,
-                            recipes = categoryRecipes.take(10)
-                        )
-                    )
+                    sections.add(RecipeSection(title = category, recipes = categoryRecipes.take(10)))
                 }
             }
 
