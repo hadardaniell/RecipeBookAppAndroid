@@ -48,9 +48,10 @@
             app:destination="@id/recipeDetailsFragment" />
     </fragment>
 
+    <!-- FIXED: Changed ui.recipe to ui.recipes -->
     <fragment
         android:id="@+id/recipeDetailsFragment"
-        android:name="com.example.recipebookappandorid.ui.recipe.RecipeDetailsFragment"
+        android:name="com.example.recipebookappandorid.ui.recipes.RecipeDetailsFragment"
         android:label="Recipe Details">
 
         <action
@@ -145,6 +146,10 @@
         <action
             android:id="@+id/action_addRecipeFragment_to_recipeDetailsFragment"
             app:destination="@id/recipeDetailsFragment" />
+
+        <action
+            android:id="@+id/action_addRecipeFragment_to_sharedBookDetailsFragment"
+            app:destination="@id/sharedBookDetailsFragment" />
 
         <argument
             android:name="recipeId"

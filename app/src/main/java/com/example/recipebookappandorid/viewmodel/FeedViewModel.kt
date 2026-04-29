@@ -112,10 +112,13 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun syncCloudRecipes() {
-        val currentUserId = authRepository.getCurrentUser()?.uid ?: return
+        val user = authRepository.getCurrentUser() ?: return
         viewModelScope.launch {
             runCatching {
-                repository.syncSharedRecipesFromCloud(currentUserId)
+                repository.syncSharedRecipesFromCloud(
+                    userId = user.uid,
+                    userEmail = user.email.orEmpty()
+                )
             }
         }
     }
@@ -140,14 +143,29 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     private fun buildSections(recipes: List<Recipe>): List<RecipeSection> {
         if (recipes.isEmpty()) return emptyList()
 
+        val currentUser = authRepository.getCurrentUser()
+        val currentUserId = currentUser?.uid.orEmpty()
+        val currentUserEmail = currentUser?.email.orEmpty().lowercase()
         val sections = mutableListOf<RecipeSection>()
 
-        sections.add(
-            RecipeSection(
-                title = "Popular now",
-                recipes = recipes.take(10)
-            )
-        )
+        val sharedWithMe = recipes.filter { recipe ->
+            recipe.authorId != currentUserId &&
+                (recipe.sharedWithUserIds.contains(currentUserId) ||
+                    recipe.sharedWith.contains(currentUserEmail))
+        }
+        if (sharedWithMe.isNotEmpty()) {
+            sections.add(RecipeSection(title = "Shared with me", recipes = sharedWithMe))
+        }
+
+        val communityRecipes = recipes.filter {
+            it.authorId != "themealdb" &&
+                it.authorId != currentUserId &&
+                !it.sharedWithUserIds.contains(currentUserId) &&
+                !it.sharedWith.contains(currentUserEmail)
+        }
+        if (communityRecipes.isNotEmpty()) {
+            sections.add(RecipeSection(title = "Community Recipes", recipes = communityRecipes.take(10)))
+        }
 
         val importedMeals = recipes.filter { it.authorId == "themealdb" }
         if (importedMeals.isNotEmpty()) {
@@ -159,39 +177,20 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        val easyRecipes = recipes.filter {
-            it.difficulty.equals("Easy", ignoreCase = true)
-        }
+        val easyRecipes = recipes.filter { it.difficulty.equals("Easy", ignoreCase = true) }
         if (easyRecipes.isNotEmpty()) {
-            sections.add(
-                RecipeSection(
-                    title = "Easy to make",
-                    recipes = easyRecipes.take(10)
-                )
-            )
+            sections.add(RecipeSection(title = "Easy to make", recipes = easyRecipes.take(10)))
         }
 
-        val quickRecipes = recipes.filter { recipe ->
-            extractMinutes(recipe.prepTime) <= 30
-        }
+        val quickRecipes = recipes.filter { extractMinutes(it.prepTime) <= 30 }
         if (quickRecipes.isNotEmpty()) {
-            sections.add(
-                RecipeSection(
-                    title = "Ready in 30 min",
-                    recipes = quickRecipes.take(10)
-                )
-            )
+            sections.add(RecipeSection(title = "Ready in 30 min", recipes = quickRecipes.take(10)))
         }
 
         recipes.groupBy { it.category.ifBlank { "Other" } }
             .forEach { (category, categoryRecipes) ->
                 if (categoryRecipes.isNotEmpty()) {
-                    sections.add(
-                        RecipeSection(
-                            title = category,
-                            recipes = categoryRecipes.take(10)
-                        )
-                    )
+                    sections.add(RecipeSection(title = category, recipes = categoryRecipes.take(10)))
                 }
             }
 

@@ -1,10 +1,12 @@
-package com.example.recipebookappandorid.ui.recipe
+package com.example.recipebookappandorid.ui.recipes
 
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
-import android.app.AlertDialog
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -36,6 +38,7 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         _binding = FragmentRecipeDetailsBinding.bind(view)
 
         val args = RecipeDetailsFragmentArgs.fromBundle(requireArguments())
+        val currentUserId = authRepository.getCurrentUser()?.uid.orEmpty()
         currentRecipe = Recipe(
             id = args.id,
             title = args.title,
@@ -62,33 +65,39 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
             .into(binding.ivRecipeImage)
 
         binding.tvRecipeTitle.text = args.title
-        binding.tvRecipeAuthor.text = "By ${args.authorName}"
-        binding.tvPrepTime.text = "Prep time: ${args.prepTime}"
-        binding.tvDifficulty.text = "Difficulty: ${args.difficulty}"
-        binding.tvCategory.text = "Category: ${args.category}"
+        binding.tvRecipeAuthor.text = getString(R.string.recipe_author_format, args.authorName)
+        binding.tvPrepTime.text = getString(R.string.recipe_prep_time_format, args.prepTime)
+        binding.tvDifficulty.text = getString(R.string.recipe_difficulty_format, args.difficulty)
+        binding.tvCategory.text = getString(R.string.recipe_category_format, args.category)
         binding.tvSharedBook.visibility = if (args.sharedBookName.isBlank()) View.GONE else View.VISIBLE
-        binding.tvSharedBook.text = "Shared book: ${args.sharedBookName}"
+        binding.tvSharedBook.text = getString(R.string.recipe_shared_book_format, args.sharedBookName)
         renderIngredients(args.ingredients)
         binding.tvSteps.text = args.steps
         binding.tvNotes.text = args.notes
-        binding.btnImportRecipe.visibility = if (args.isRemote) View.VISIBLE else View.GONE
-        val currentUserId = authRepository.getCurrentUser()?.uid.orEmpty()
-        binding.layoutRecipeActions.visibility = View.GONE
 
-        if (!args.isRemote) {
+        val isMyRecipe = currentUserId == args.authorId
+        if (args.isRemote) {
+            binding.btnImportRecipe.visibility = View.VISIBLE
+            binding.layoutRecipeActions.visibility = View.GONE
+            binding.btnShareRecipe.visibility = View.GONE
+        } else {
+            binding.btnImportRecipe.visibility = View.GONE
+            binding.layoutRecipeActions.visibility = View.GONE
+            binding.btnShareRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
+
             if (args.sharedBookId.isBlank()) {
-                binding.layoutRecipeActions.visibility =
-                    if (args.authorId == currentUserId) View.VISIBLE else View.GONE
+                binding.layoutRecipeActions.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
+                binding.btnDeleteRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
             } else {
                 viewLifecycleOwner.lifecycleScope.launch {
                     val book = SharedRecipeBookRepository(requireContext()).getBookById(args.sharedBookId)
                     val currentRole = book?.roleFor(currentUserId)
-                    val canEditRecipe = args.authorId == currentUserId ||
+                    val canEditRecipe = isMyRecipe ||
                         currentRole == SharedBookRole.OWNER ||
                         currentRole == SharedBookRole.EDITOR
                     if (_binding != null) {
-                        binding.layoutRecipeActions.visibility =
-                            if (canEditRecipe) View.VISIBLE else View.GONE
+                        binding.layoutRecipeActions.visibility = if (canEditRecipe) View.VISIBLE else View.GONE
+                        binding.btnDeleteRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
                     }
                 }
             }
@@ -148,11 +157,15 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
             showShareToBookDialog()
         }
 
+        binding.btnShareRecipe.setOnClickListener {
+            showShareDialog(args.id)
+        }
+
         viewModel.importSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 Toast.makeText(requireContext(), "Recipe imported", Toast.LENGTH_SHORT).show()
                 binding.btnImportRecipe.isEnabled = false
-                binding.btnImportRecipe.text = "Imported"
+                binding.btnImportRecipe.text = getString(R.string.imported)
             }
         }
 
@@ -160,8 +173,9 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
             if (success) {
                 binding.tvSharedBook.visibility =
                     if (currentRecipe.sharedBookName.isBlank()) View.GONE else View.VISIBLE
-                binding.tvSharedBook.text = "Shared book: ${currentRecipe.sharedBookName}"
-                Toast.makeText(requireContext(), "Recipe saved", Toast.LENGTH_SHORT).show()
+                binding.tvSharedBook.text =
+                    getString(R.string.recipe_shared_book_format, currentRecipe.sharedBookName)
+                Toast.makeText(requireContext(), "Action completed successfully", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -177,6 +191,28 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
                 findNavController().navigateUp()
             }
         }
+    }
+
+    private fun showShareDialog(recipeId: String) {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            hint = "Enter friend's email"
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Share Recipe")
+            .setMessage("Who do you want to share this recipe with?")
+            .setView(input)
+            .setPositiveButton("Share") { _, _ ->
+                val email = input.text.toString().trim()
+                if (email.isNotEmpty()) {
+                    viewModel.shareRecipe(recipeId, email)
+                } else {
+                    Toast.makeText(requireContext(), "Email cannot be empty", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onDestroyView() {

@@ -13,6 +13,7 @@ import com.example.recipebookappandorid.data.local.entity.RecipeEntity
 import com.example.recipebookappandorid.data.local.entity.SharedBookInviteEntity
 import com.example.recipebookappandorid.data.local.entity.SharedRecipeBookEntity
 import com.example.recipebookappandorid.data.local.entity.UserEntity
+
 @Database(
     entities = [
         UserEntity::class,
@@ -20,7 +21,7 @@ import com.example.recipebookappandorid.data.local.entity.UserEntity
         SharedRecipeBookEntity::class,
         SharedBookInviteEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

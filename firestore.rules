@@ -10,19 +10,15 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function userEmail() {
+      return isSignedIn() && request.auth.token.email != null
+        ? request.auth.token.email
+        : "";
+    }
+
     function recipeVisibleToUser() {
       return isSignedIn() &&
         request.auth.uid in resource.data.sharedWithUserIds;
-    }
-
-    function bookMember(bookId) {
-      return isSignedIn() &&
-        request.auth.uid in get(/databases/$(database)/documents/shared_books/$(bookId)).data.memberIds;
-    }
-
-    function bookOwner(bookId) {
-      return isSignedIn() &&
-        get(/databases/$(database)/documents/shared_books/$(bookId)).data.ownerId == request.auth.uid;
     }
 
     match /users/{userId} {
@@ -36,9 +32,11 @@ service cloud.firestore {
     }
 
     match /shared_books/{bookId} {
-      allow read: if bookMember(bookId);
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if bookOwner(bookId);
+      allow read: if isSignedIn() && request.auth.uid in resource.data.memberIds;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.auth.uid in request.resource.data.memberIds;
+      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
     match /shared_book_invites/{inviteId} {
@@ -46,16 +44,16 @@ service cloud.firestore {
         (
           resource.data.inviterId == request.auth.uid ||
           resource.data.inviteeUserId == request.auth.uid ||
-          resource.data.inviteeEmail == request.auth.token.email
+          resource.data.inviteeEmail == userEmail()
         );
 
-      allow create: if isSignedIn() && bookMember(request.resource.data.bookId);
+      allow create: if isSignedIn() && request.resource.data.inviterId == request.auth.uid;
 
       allow update: if isSignedIn() &&
         (
           resource.data.inviterId == request.auth.uid ||
           resource.data.inviteeUserId == request.auth.uid ||
-          resource.data.inviteeEmail == request.auth.token.email
+          resource.data.inviteeEmail == userEmail()
         );
     }
   }

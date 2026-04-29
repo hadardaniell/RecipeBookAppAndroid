@@ -17,5 +17,6 @@ data class Recipe(
     val sharedBookName: String = "",
     val sharedWithUserIds: List<String> = emptyList(),
     val sharedRole: String = "",
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    val sharedWith: List<String> = emptyList()
 )

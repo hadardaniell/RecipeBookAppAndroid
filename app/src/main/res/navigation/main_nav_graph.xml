@@ -114,9 +114,10 @@
             app:destination="@id/recipeDetailsFragment" />
     </fragment>
 
+    <!-- FIXED: Changed ui.recipe to ui.recipes -->
     <fragment
         android:id="@+id/recipeDetailsFragment"
-        android:name="com.example.recipebookappandorid.ui.recipe.RecipeDetailsFragment"
+        android:name="com.example.recipebookappandorid.ui.recipes.RecipeDetailsFragment"
         android:label="Recipe Details">
 
         <action

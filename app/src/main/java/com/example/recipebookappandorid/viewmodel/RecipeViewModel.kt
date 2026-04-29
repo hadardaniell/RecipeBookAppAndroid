@@ -178,6 +178,21 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun shareRecipe(recipeId: String, email: String) {
+        val normalizedEmail = email.trim()
+        if (normalizedEmail.isBlank()) return
+
+        viewModelScope.launch {
+            runCatching {
+                recipeRepository.shareRecipeWithEmail(recipeId, normalizedEmail)
+            }.onSuccess {
+                _saveSuccess.postValue(true) // Reusing saveSuccess to trigger a toast
+            }.onFailure { exception ->
+                _saveError.postValue(exception.message ?: "Failed to share recipe")
+            }
+        }
+    }
+
     fun onRecipeNavigationHandled() {
         _savedRecipe.value = null
     }

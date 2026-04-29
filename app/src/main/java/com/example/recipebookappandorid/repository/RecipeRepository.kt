@@ -6,6 +6,7 @@ import androidx.lifecycle.map
 import com.example.recipebookappandorid.data.local.AppDatabase
 import com.example.recipebookappandorid.data.local.entity.RecipeEntity
 import com.example.recipebookappandorid.model.Recipe
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -20,9 +21,7 @@ class RecipeRepository(context: Context) {
     }
 
     fun getAllRecipes(): LiveData<List<Recipe>> {
-        return recipeDao.getAllRecipes().map { list ->
-            list.map { it.toModel() }
-        }
+        return recipeDao.getAllRecipes().map { list -> list.map { it.toModel() } }
     }
 
     suspend fun getMyRecipes(authorId: String): List<Recipe> {
@@ -43,18 +42,41 @@ class RecipeRepository(context: Context) {
         recipesCollection.document(recipeId).delete().await()
     }
 
-    suspend fun syncSharedRecipesFromCloud(userId: String) {
-        val snapshot = recipesCollection
+    suspend fun shareRecipeWithEmail(recipeId: String, email: String) {
+        val normalizedEmail = email.trim().lowercase()
+        recipesCollection.document(recipeId)
+            .update("sharedWith", FieldValue.arrayUnion(normalizedEmail))
+            .await()
+
+        val localRecipe = getRecipeById(recipeId)
+        if (localRecipe != null && !localRecipe.sharedWith.contains(normalizedEmail)) {
+            val updated = localRecipe.copy(sharedWith = localRecipe.sharedWith + normalizedEmail)
+            recipeDao.updateRecipe(updated.toEntity())
+        }
+    }
+
+    suspend fun syncSharedRecipesFromCloud(userId: String, userEmail: String) {
+        val sharedByUserId = recipesCollection
             .whereArrayContains("sharedWithUserIds", userId)
             .get()
             .await()
+            .documents
+            .mapNotNull { it.toObject(Recipe::class.java) }
 
-        val recipes = snapshot.documents.mapNotNull { document ->
-            document.toObject(Recipe::class.java)
+        val sharedByEmail = if (userEmail.isNotBlank()) {
+            recipesCollection
+                .whereArrayContains("sharedWith", userEmail.lowercase())
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.toObject(Recipe::class.java) }
+        } else {
+            emptyList()
         }
 
+        val combined = (sharedByUserId + sharedByEmail).distinctBy { it.id }
         recipeDao.clearRecipes()
-        recipeDao.insertRecipes(recipes.map { it.toEntity() })
+        recipeDao.insertRecipes(combined.map { it.toEntity() })
     }
 
     private fun Recipe.toEntity(): RecipeEntity {
@@ -75,7 +97,8 @@ class RecipeRepository(context: Context) {
             sharedBookName = sharedBookName,
             sharedWithUserIds = sharedWithUserIds,
             sharedRole = sharedRole,
-            createdAt = createdAt
+            createdAt = createdAt,
+            sharedWith = sharedWith.joinToString(",")
         )
     }
 
@@ -97,7 +120,8 @@ class RecipeRepository(context: Context) {
             sharedBookName = sharedBookName,
             sharedWithUserIds = sharedWithUserIds,
             sharedRole = sharedRole,
-            createdAt = createdAt
+            createdAt = createdAt,
+            sharedWith = if (sharedWith.isBlank()) emptyList() else sharedWith.split(",")
         )
     }
 }

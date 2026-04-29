@@ -32,6 +32,7 @@ class SharedRecipeBookRepository(context: Context) {
     }
 
     suspend fun syncForUser(userId: String, email: String) {
+        val normalizedEmail = email.trim().lowercase()
         val booksSnapshot = booksCollection
             .whereArrayContains("memberIds", userId)
             .get()
@@ -43,7 +44,7 @@ class SharedRecipeBookRepository(context: Context) {
 
         val inviteQueries = listOfNotNull(
             invitesCollection.whereEqualTo("inviteeUserId", userId),
-            email.takeIf { it.isNotBlank() }?.let {
+            normalizedEmail.takeIf { it.isNotBlank() }?.let {
                 invitesCollection.whereEqualTo("inviteeEmail", it)
             }
         )

@@ -22,5 +22,6 @@ data class RecipeEntity(
     val sharedBookName: String,
     val sharedWithUserIds: List<String>,
     val sharedRole: String,
-    val createdAt: Long
+    val createdAt: Long,
+    val sharedWith: String = ""
 )
