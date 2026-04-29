@@ -31,7 +31,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:adjustViewBounds="true"
-                    android:background="@drawable/bg_soft_card"
+                    android:background="@color/white"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_recipe_placeholder" />
 
@@ -66,18 +66,18 @@
                         android:layout_width="38dp"
                         android:layout_height="38dp"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_soft_card"
+                        android:background="@android:color/transparent"
                         android:contentDescription="Edit recipe"
                         android:padding="9dp"
                         android:src="@android:drawable/ic_menu_edit"
-                        android:tint="@color/navy_700"
+                        android:tint="@color/ink_500"
                         android:visibility="gone" />
 
                     <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btnShareRecipe"
                         android:layout_width="38dp"
                         android:layout_height="38dp"
-                        android:background="@drawable/bg_soft_card"
+                        android:background="@android:color/transparent"
                         android:contentDescription="Share recipe"
                         android:padding="9dp"
                         android:src="@android:drawable/ic_menu_share"
@@ -95,24 +95,25 @@
                 android:orientation="vertical"
                 android:padding="22dp">
 
-                <TextView
-                    android:id="@+id/tvRecipeTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="serif"
-                    android:text="Recipe Title"
-                    android:textColor="@color/ink_900"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvRecipeTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Recipe Title"
+                android:textColor="@color/ink_900"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/tvRecipeAuthor"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="By Author"
-                    android:textColor="@color/ink_700"
-                    android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvRecipeAuthor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="By Author"
+                android:textColor="@color/ink_700"
+                android:textSize="15sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -120,65 +121,113 @@
                     android:layout_marginTop="16dp"
                     android:orientation="horizontal">
 
-                    <TextView
+                    <com.google.android.material.chip.Chip
                         android:id="@+id/tvPrepTime"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_meta_pill"
-                        android:paddingStart="12dp"
-                        android:paddingTop="8dp"
-                        android:paddingEnd="12dp"
-                        android:paddingBottom="8dp"
+                        android:layout_height="28dp"
+                        android:checkable="false"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:fontFamily="sans-serif-medium"
                         android:text="Prep time: 20 min"
-                        android:textColor="@color/navy_700"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        app:chipBackgroundColor="@color/navy_500"
+                        app:chipCornerRadius="14dp"
+                        app:chipEndPadding="10dp"
+                        app:chipMinHeight="28dp"
+                        app:chipStartPadding="10dp"
+                        app:chipStrokeWidth="0dp"
+                        app:closeIconVisible="false"
+                        app:ensureMinTouchTargetSize="false"
+                        app:hideMotionSpec="@null"
+                        app:rippleColor="@android:color/transparent"
+                        app:showMotionSpec="@null"
+                        app:textEndPadding="0dp"
+                        app:textStartPadding="0dp" />
 
-                    <TextView
+                    <com.google.android.material.chip.Chip
                         android:id="@+id/tvDifficulty"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="28dp"
                         android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_meta_pill"
-                        android:paddingStart="12dp"
-                        android:paddingTop="8dp"
-                        android:paddingEnd="12dp"
-                        android:paddingBottom="8dp"
+                        android:checkable="false"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:fontFamily="sans-serif-medium"
                         android:text="Difficulty: Easy"
-                        android:textColor="@color/navy_700"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        app:chipBackgroundColor="@color/navy_500"
+                        app:chipCornerRadius="14dp"
+                        app:chipEndPadding="10dp"
+                        app:chipMinHeight="28dp"
+                        app:chipStartPadding="10dp"
+                        app:chipStrokeWidth="0dp"
+                        app:closeIconVisible="false"
+                        app:ensureMinTouchTargetSize="false"
+                        app:hideMotionSpec="@null"
+                        app:rippleColor="@android:color/transparent"
+                        app:showMotionSpec="@null"
+                        app:textEndPadding="0dp"
+                        app:textStartPadding="0dp" />
                 </LinearLayout>
 
-                <TextView
+                <com.google.android.material.chip.Chip
                     android:id="@+id/tvCategory"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="28dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_meta_pill"
-                    android:paddingStart="12dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="8dp"
+                    android:checkable="false"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Category: Pasta"
-                    android:textColor="@color/navy_700"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:chipBackgroundColor="@color/navy_500"
+                    app:chipCornerRadius="14dp"
+                    app:chipEndPadding="10dp"
+                    app:chipMinHeight="28dp"
+                    app:chipStartPadding="10dp"
+                    app:chipStrokeWidth="0dp"
+                    app:closeIconVisible="false"
+                    app:ensureMinTouchTargetSize="false"
+                    app:hideMotionSpec="@null"
+                    app:rippleColor="@android:color/transparent"
+                    app:showMotionSpec="@null"
+                    app:textEndPadding="0dp"
+                    app:textStartPadding="0dp" />
 
-                <TextView
+                <com.google.android.material.chip.Chip
                     android:id="@+id/tvSharedBook"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="28dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_meta_pill"
-                    android:paddingStart="12dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="8dp"
+                    android:checkable="false"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Shared book: Family Dinners"
-                    android:textColor="@color/navy_700"
-                    android:textSize="12sp"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
                     android:textStyle="bold"
+                    app:chipBackgroundColor="@color/navy_500"
+                    app:chipCornerRadius="14dp"
+                    app:chipEndPadding="10dp"
+                    app:chipMinHeight="28dp"
+                    app:chipStartPadding="10dp"
+                    app:chipStrokeWidth="0dp"
+                    app:closeIconVisible="false"
+                    app:ensureMinTouchTargetSize="false"
+                    app:hideMotionSpec="@null"
+                    app:rippleColor="@android:color/transparent"
+                    app:showMotionSpec="@null"
+                    app:textEndPadding="0dp"
+                    app:textStartPadding="0dp"
                     android:visibility="gone" />
             </LinearLayout>
 
@@ -186,14 +235,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
-                android:background="@drawable/bg_soft_card"
+                android:background="@drawable/bg_surface_card"
                 android:orientation="vertical"
                 android:padding="20dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="serif"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Ingredients"
                     android:textColor="@color/ink_900"
                     android:textSize="20sp"
@@ -211,14 +260,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:background="@drawable/bg_soft_card"
+                android:background="@drawable/bg_surface_card"
                 android:orientation="vertical"
                 android:padding="20dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="serif"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Steps"
                     android:textColor="@color/ink_900"
                     android:textSize="20sp"
@@ -229,6 +278,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Steps here"
                     android:textColor="@color/ink_700"
                     android:textSize="15sp" />
@@ -238,14 +288,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:background="@drawable/bg_soft_card"
+                android:background="@drawable/bg_surface_card"
                 android:orientation="vertical"
                 android:padding="20dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="serif"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Notes"
                     android:textColor="@color/ink_900"
                     android:textSize="20sp"
@@ -256,6 +306,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Notes here"
                     android:textColor="@color/ink_700"
                     android:textSize="15sp" />
