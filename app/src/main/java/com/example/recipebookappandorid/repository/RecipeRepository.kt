@@ -43,8 +43,9 @@ class RecipeRepository(context: Context) {
         recipesCollection.document(recipeId).delete().await()
     }
 
-    suspend fun syncSharedRecipesFromCloud() {
+    suspend fun syncSharedRecipesFromCloud(userId: String) {
         val snapshot = recipesCollection
+            .whereArrayContains("sharedWithUserIds", userId)
             .get()
             .await()
 
@@ -70,6 +71,10 @@ class RecipeRepository(context: Context) {
             notes = notes,
             authorId = authorId,
             authorName = authorName,
+            sharedBookId = sharedBookId,
+            sharedBookName = sharedBookName,
+            sharedWithUserIds = sharedWithUserIds,
+            sharedRole = sharedRole,
             createdAt = createdAt
         )
     }
@@ -88,6 +93,10 @@ class RecipeRepository(context: Context) {
             notes = notes,
             authorId = authorId,
             authorName = authorName,
+            sharedBookId = sharedBookId,
+            sharedBookName = sharedBookName,
+            sharedWithUserIds = sharedWithUserIds,
+            sharedRole = sharedRole,
             createdAt = createdAt
         )
     }

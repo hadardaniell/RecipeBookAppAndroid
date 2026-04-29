@@ -19,6 +19,7 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
 
     private var _binding: FragmentAddRecipeBinding? = null
     private val binding get() = _binding!!
+    private lateinit var navArgs: AddRecipeFragmentArgs
 
     private val viewModel: RecipeViewModel by viewModels()
     private val ingredientRows = mutableListOf<ItemIngredientInputBinding>()
@@ -67,13 +68,16 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddRecipeBinding.bind(view)
-        val args = AddRecipeFragmentArgs.fromBundle(requireArguments())
+        navArgs = AddRecipeFragmentArgs.fromBundle(requireArguments())
 
         setupDropdowns()
+        binding.btnBack.setOnClickListener {
+            navigateBack(navArgs)
+        }
         binding.btnAddIngredient.setOnClickListener {
             addIngredientRow()
         }
-        populateForEdit(args)
+        populateForEdit(navArgs)
         if (ingredientRows.isEmpty()) {
             addIngredientRow()
         }
@@ -88,18 +92,20 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
             val steps = binding.etSteps.text.toString().trim()
             val notes = binding.etNotes.text.toString().trim()
 
-            if (args.isEditMode) {
+            if (navArgs.isEditMode) {
                 viewModel.updateRecipe(
-                    recipeId = args.recipeId,
+                    recipeId = navArgs.recipeId,
                     title = title,
                     description = description,
-                    imageUrl = args.imageUrl,
+                    imageUrl = navArgs.imageUrl,
                     prepTime = prepTime,
                     difficulty = difficulty,
                     category = category,
                     ingredients = ingredients,
                     steps = steps,
-                    notes = notes
+                    notes = notes,
+                    sharedBookId = navArgs.sharedBookId,
+                    sharedBookName = navArgs.sharedBookName
                 )
             } else {
                 viewModel.addRecipe(
@@ -110,7 +116,9 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
                     category = category,
                     ingredients = ingredients,
                     steps = steps,
-                    notes = notes
+                    notes = notes,
+                    sharedBookId = navArgs.sharedBookId,
+                    sharedBookName = navArgs.sharedBookName
                 )
             }
         }
@@ -162,24 +170,50 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
 
         viewModel.savedRecipe.observe(viewLifecycleOwner) { recipe ->
             if (recipe != null) {
-                val action = AddRecipeFragmentDirections.actionAddRecipeFragmentToRecipeDetailsFragment(
-                    id = recipe.id,
-                    description = recipe.description,
-                    imageUrl = recipe.imageUrl,
-                    title = recipe.title,
-                    authorId = recipe.authorId,
-                    authorName = recipe.authorName,
-                    prepTime = recipe.prepTime,
-                    difficulty = recipe.difficulty,
-                    category = recipe.category,
-                    ingredients = recipe.ingredients,
-                    steps = recipe.steps,
-                    notes = recipe.notes,
-                    isRemote = false
-                )
                 viewModel.onRecipeNavigationHandled()
-                findNavController().navigate(action)
+                if (!navArgs.isEditMode && navArgs.sharedBookId.isNotBlank()) {
+                    val action =
+                        AddRecipeFragmentDirections.actionAddRecipeFragmentToSharedBookDetailsFragment(
+                            bookId = navArgs.sharedBookId,
+                            bookName = navArgs.sharedBookName
+                        )
+                    findNavController().navigate(action)
+                } else {
+                    val action = AddRecipeFragmentDirections.actionAddRecipeFragmentToRecipeDetailsFragment(
+                        id = recipe.id,
+                        description = recipe.description,
+                        imageUrl = recipe.imageUrl,
+                        title = recipe.title,
+                        authorId = recipe.authorId,
+                        authorName = recipe.authorName,
+                        prepTime = recipe.prepTime,
+                        difficulty = recipe.difficulty,
+                        category = recipe.category,
+                        ingredients = recipe.ingredients,
+                        steps = recipe.steps,
+                        notes = recipe.notes,
+                        sharedBookId = recipe.sharedBookId,
+                        sharedBookName = recipe.sharedBookName,
+                        sharedWithUserIds = recipe.sharedWithUserIds.toTypedArray(),
+                        sharedRole = recipe.sharedRole,
+                        isRemote = false
+                    )
+                    findNavController().navigate(action)
+                }
             }
+        }
+    }
+
+    private fun navigateBack(args: AddRecipeFragmentArgs) {
+        if (!args.isEditMode && args.sharedBookId.isNotBlank()) {
+            val action =
+                AddRecipeFragmentDirections.actionAddRecipeFragmentToSharedBookDetailsFragment(
+                    bookId = args.sharedBookId,
+                    bookName = args.sharedBookName
+                )
+            findNavController().navigate(action)
+        } else {
+            findNavController().navigateUp()
         }
     }
 

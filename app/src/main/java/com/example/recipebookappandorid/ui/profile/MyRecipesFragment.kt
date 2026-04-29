@@ -48,6 +48,10 @@ class MyRecipesFragment : Fragment(R.layout.fragment_my_recipes) {
             ingredients = recipe.ingredients,
             steps = recipe.steps,
             notes = recipe.notes,
+            sharedBookId = recipe.sharedBookId,
+            sharedBookName = recipe.sharedBookName,
+            sharedWithUserIds = recipe.sharedWithUserIds.toTypedArray(),
+            sharedRole = recipe.sharedRole,
             isRemote = false
         )
         findNavController().navigate(action)

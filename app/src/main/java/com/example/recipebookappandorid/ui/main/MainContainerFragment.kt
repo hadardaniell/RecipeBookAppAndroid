@@ -62,7 +62,11 @@ class MainContainerFragment : Fragment(R.layout.fragment_main_container) {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val selectedItemId = when (destination.id) {
-                R.id.profileFragment, R.id.editProfileFragment -> R.id.profileFragment
+                R.id.profileFragment,
+                R.id.editProfileFragment,
+                R.id.myRecipesFragment,
+                R.id.sharedBooksFragment,
+                R.id.sharedBookDetailsFragment -> R.id.profileFragment
                 R.id.addRecipeFragment -> R.id.addRecipeFragment
                 else -> R.id.feedFragment
             }

@@ -18,5 +18,9 @@ data class RecipeEntity(
     val notes: String,
     val authorId: String,
     val authorName: String,
+    val sharedBookId: String,
+    val sharedBookName: String,
+    val sharedWithUserIds: List<String>,
+    val sharedRole: String,
     val createdAt: Long
 )

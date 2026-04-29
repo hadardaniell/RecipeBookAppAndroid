@@ -94,6 +94,18 @@
             android:name="notes"
             app:argType="string" />
         <argument
+            android:name="sharedBookId"
+            app:argType="string" />
+        <argument
+            android:name="sharedBookName"
+            app:argType="string" />
+        <argument
+            android:name="sharedWithUserIds"
+            app:argType="string[]" />
+        <argument
+            android:name="sharedRole"
+            app:argType="string" />
+        <argument
             android:name="isRemote"
             app:argType="boolean" />
     </fragment>
@@ -114,6 +126,10 @@
         <action
             android:id="@+id/action_profileFragment_to_myRecipesFragment"
             app:destination="@id/myRecipesFragment" />
+
+        <action
+            android:id="@+id/action_profileFragment_to_sharedBooksFragment"
+            app:destination="@id/sharedBooksFragment" />
     </fragment>
 
     <fragment
@@ -171,6 +187,14 @@
             android:defaultValue=""
             app:argType="string" />
         <argument
+            android:name="sharedBookId"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
+            android:name="sharedBookName"
+            android:defaultValue=""
+            app:argType="string" />
+        <argument
             android:name="isEditMode"
             android:defaultValue="false"
             app:argType="boolean" />
@@ -190,6 +214,37 @@
         android:id="@+id/mainContainerFragment"
         android:name="com.example.recipebookappandorid.ui.main.MainContainerFragment"
         android:label="Main Container" />
+
+    <fragment
+        android:id="@+id/sharedBooksFragment"
+        android:name="com.example.recipebookappandorid.ui.profile.SharedBooksFragment"
+        android:label="Shared Books">
+
+        <action
+            android:id="@+id/action_sharedBooksFragment_to_sharedBookDetailsFragment"
+            app:destination="@id/sharedBookDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/sharedBookDetailsFragment"
+        android:name="com.example.recipebookappandorid.ui.profile.SharedBookDetailsFragment"
+        android:label="Shared Book Details">
+
+        <action
+            android:id="@+id/action_sharedBookDetailsFragment_to_recipeDetailsFragment"
+            app:destination="@id/recipeDetailsFragment" />
+
+        <action
+            android:id="@+id/action_sharedBookDetailsFragment_to_addRecipeFragment"
+            app:destination="@id/addRecipeFragment" />
+
+        <argument
+            android:name="bookId"
+            app:argType="string" />
+        <argument
+            android:name="bookName"
+            app:argType="string" />
+    </fragment>
 
 
 </navigation>
