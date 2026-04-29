@@ -64,20 +64,27 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val uid = firebaseUser?.uid.orEmpty()
 
                 viewModelScope.launch {
-                    val existingUser = if (uid.isNotEmpty()) userRepository.getUser(uid) else null
+                    try {
+                        val existingUser = if (uid.isNotEmpty()) userRepository.getUser(uid) else null
 
-                    if (uid.isNotEmpty() && existingUser == null) {
-                        val user = User(
-                            uid = uid,
-                            name = firebaseUser?.displayName.orEmpty(),
-                            email = firebaseUser?.email?.trim()?.lowercase() ?: normalizedEmail,
-                            profileImageUrl = ""
-                        )
-                        userRepository.saveUser(user)
+                        if (uid.isNotEmpty() && existingUser == null) {
+                            val user = User(
+                                uid = uid,
+                                name = firebaseUser?.displayName.orEmpty(),
+                                email = firebaseUser?.email?.trim()?.lowercase() ?: normalizedEmail,
+                                profileImageUrl = ""
+                            )
+                            userRepository.saveUser(user)
+                        }
+
+                        _loading.postValue(false)
+                        _loginSuccess.postValue(true)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        _loading.postValue(false)
+                        // If it fails to fetch/save from firestore, still log them in
+                        _loginSuccess.postValue(true) 
                     }
-
-                    _loading.postValue(false)
-                    _loginSuccess.postValue(true)
                 }
             },
             onError = { errorMessage ->
@@ -105,11 +112,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             val normalizedEmail = email.trim().lowercase()
-            val existingUser = userRepository.findUserByEmail(normalizedEmail)
-            if (existingUser != null) {
-                _loading.postValue(false)
-                _emailError.postValue("This email address is already registered")
-                return@launch
+            try {
+                val existingUser = userRepository.findUserByEmail(normalizedEmail)
+                if (existingUser != null) {
+                    _loading.postValue(false)
+                    _emailError.postValue("This email address is already registered")
+                    return@launch
+                }
+            } catch (e: Exception) {
+                // Ignore network issues for pre-validation and just proceed to auth
             }
 
             authRepository.register(
@@ -126,9 +137,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     )
 
                     viewModelScope.launch {
-                        userRepository.saveUser(user)
-                        _loading.postValue(false)
-                        _registerSuccess.postValue(true)
+                        try {
+                            userRepository.saveUser(user)
+                            _loading.postValue(false)
+                            _registerSuccess.postValue(true)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            _loading.postValue(false)
+                            // Sometimes firestore fails due to rules, but Auth succeeded.
+                            _registerError.postValue("User registered, but failed to save profile: ${e.message}")
+                            _registerSuccess.postValue(true) // Still navigate them in!
+                        }
                     }
                 },
                 onError = { errorMessage ->
