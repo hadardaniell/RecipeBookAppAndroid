@@ -12,84 +12,229 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_blue_panel"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="28dp">
+            app:cardBackgroundColor="@color/surface_white"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/stroke_soft"
+            app:strokeWidth="1dp">
 
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/profileImage"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
-                android:padding="2dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_recipe_placeholder"
-                app:strokeColor="@color/white"
-                app:strokeWidth="4dp"
-                app:shapeAppearanceOverlay="@style/Widget.Material3.CircularProgressIndicator" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="210dp"
+                    android:orientation="vertical"
+                    android:padding="24dp">
 
-            <TextView
-                android:id="@+id/tvName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:fontFamily="serif"
-                android:text="Name"
-                android:textColor="@color/white"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                    <LinearLayout
+                        android:id="@+id/layoutProfileActions"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tvEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Email"
-                android:textColor="@color/cream_100"
-                android:textSize="15sp" />
-        </LinearLayout>
+                        <androidx.appcompat.widget.AppCompatImageButton
+                            android:id="@+id/btnLogout"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:background="@drawable/bg_soft_card"
+                            android:contentDescription="Logout"
+                            android:padding="10dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_logout_standard"
+                            android:tint="@color/navy_700" />
 
-        <LinearLayout
+                        <androidx.appcompat.widget.AppCompatImageButton
+                            android:id="@+id/btnEditProfile"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_soft_card"
+                            android:contentDescription="Edit profile"
+                            android:padding="10dp"
+                            android:scaleType="centerInside"
+                            android:src="@android:drawable/ic_menu_edit"
+                            android:tint="@color/navy_700" />
+                    </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/profileAvatarContainer"
+                        android:layout_width="108dp"
+                        android:layout_height="108dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="18dp"
+                        app:cardBackgroundColor="@color/cream_100"
+                        app:cardCornerRadius="54dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/cream_200"
+                        app:strokeWidth="2dp">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/profileImage"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_profile_avatar_placeholder"
+                            app:shapeAppearance="@style/ShapeAppearance.RecipeBook.Pill" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:id="@+id/tvName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="serif"
+                        android:text="Full Name"
+                        android:textColor="@color/ink_900"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUsername"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="8dp"
+                        android:text="@username"
+                        android:textColor="@color/navy_700"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/profileTabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:background="@drawable/bg_surface_card"
+            app:tabIndicatorColor="@color/navy_500"
+            app:tabIndicatorFullWidth="false"
+            app:tabRippleColor="@color/cream_100"
+            app:tabSelectedTextColor="@color/navy_700"
+            app:tabTextColor="@color/ink_700">
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="My Recipe Book" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Shared" />
+        </com.google.android.material.tabs.TabLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutMyRecipesSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvMyRecipesEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="No recipes yet"
+                android:textColor="@color/ink_700"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvMyRecipes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutSharedSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:visibility="gone">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEditProfile"
+                android:id="@+id/btnCreateSharedBook"
                 style="@style/Widget.RecipeBook.PrimaryButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Edit Profile" />
+                android:text="Create Shared Book" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnMyRecipes"
-                style="@style/Widget.RecipeBook.SecondaryButton"
+            <ProgressBar
+                android:id="@+id/progressSharedBooks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="serif"
+                android:text="Pending Invitations"
+                android:textColor="@color/ink_900"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvInvitesEmpty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="My Recipe Book" />
+                android:background="@drawable/bg_surface_card"
+                android:gravity="center"
+                android:padding="20dp"
+                android:text="No pending invitations"
+                android:textColor="@color/ink_700"
+                android:textSize="15sp"
+                android:visibility="gone" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSharedBooks"
-                style="@style/Widget.RecipeBook.SecondaryButton"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvInvites"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Shared Recipe Books" />
+                android:nestedScrollingEnabled="false" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogout"
-                style="@style/Widget.RecipeBook.SecondaryButton"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="serif"
+                android:text="Shared Recipe Books"
+                android:textColor="@color/ink_900"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSharedBooksEmpty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Logout" />
+                android:background="@drawable/bg_surface_card"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="No shared books yet"
+                android:textColor="@color/ink_700"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSharedBooks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false" />
         </LinearLayout>
 
     </LinearLayout>

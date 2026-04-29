@@ -33,6 +33,10 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
 
         val args = SharedBookDetailsFragmentArgs.fromBundle(requireArguments())
 
+        binding.btnBack.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         recipesAdapter = MyRecipesAdapter(::openRecipe)
         binding.rvSharedBookRecipes.layoutManager = LinearLayoutManager(requireContext())
         binding.rvSharedBookRecipes.adapter = recipesAdapter
@@ -63,7 +67,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
             if (book != null) {
                 binding.tvSharedBookName.text = book.name
                 binding.tvSharedBookMeta.text =
-                    "Owner: ${book.ownerName} · Members: ${book.memberNames.joinToString(", ")}"
+                    "Owner: ${book.ownerName.toUsernameLike()} · Members: ${book.memberNames.joinToString(", ")}"
 
                 val currentUserId =
                     com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
@@ -219,5 +223,10 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun String.toUsernameLike(): String {
+        val source = substringBefore("@").trim()
+        return source.ifBlank { trim() }
     }
 }
