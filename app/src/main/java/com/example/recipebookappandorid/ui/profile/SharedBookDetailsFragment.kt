@@ -1,6 +1,5 @@
 package com.example.recipebookappandorid.ui.profile
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
@@ -9,13 +8,17 @@ import android.widget.Spinner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.example.recipebookappandorid.R
+import com.example.recipebookappandorid.databinding.DialogSharedMembersBinding
 import com.example.recipebookappandorid.databinding.FragmentSharedBookDetailsBinding
 import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.SharedBookMember
 import com.example.recipebookappandorid.model.SharedBookRole
+import com.example.recipebookappandorid.model.SharedRecipeBook
 import com.example.recipebookappandorid.viewmodel.SharedBookDetailsViewModel
 
 class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details) {
@@ -25,7 +28,10 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
 
     private val viewModel: SharedBookDetailsViewModel by viewModels()
     private lateinit var recipesAdapter: MyRecipesAdapter
-    private lateinit var membersAdapter: SharedMembersAdapter
+
+    private var currentBook: SharedRecipeBook? = null
+    private var canContributeToBook: Boolean = false
+    private var canManageMembers: Boolean = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,12 +44,8 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
         }
 
         recipesAdapter = MyRecipesAdapter(::openRecipe, ::confirmRemoveRecipe)
-        binding.rvSharedBookRecipes.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvSharedBookRecipes.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvSharedBookRecipes.adapter = recipesAdapter
-
-        membersAdapter = SharedMembersAdapter(::showManageMemberDialog)
-        binding.rvMembers.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvMembers.adapter = membersAdapter
 
         binding.btnAddSharedRecipe.setOnClickListener {
             val action =
@@ -55,7 +57,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
         }
 
         binding.btnShareExistingRecipe.setOnClickListener { showShareExistingDialog() }
-        binding.btnInviteMember.setOnClickListener { showInviteDialog() }
+        binding.btnMembers.setOnClickListener { showMembersDialog() }
         binding.btnLeaveBook.setOnClickListener { confirmLeaveBook() }
 
         observeViewModel()
@@ -65,6 +67,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
     private fun observeViewModel() {
         viewModel.book.observe(viewLifecycleOwner) { book ->
             if (book != null) {
+                currentBook = book
                 binding.tvSharedBookName.text = book.name
                 binding.tvSharedBookMeta.text =
                     "Owner: ${book.ownerName.toUsernameLike()} · Members: ${book.memberNames.joinToString(", ")}"
@@ -72,17 +75,17 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
                 val currentUserId =
                     com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
                 val currentRole = book.roleFor(currentUserId).orEmpty()
-                val canContribute = currentRole == SharedBookRole.OWNER || currentRole == SharedBookRole.EDITOR
-                val canManage = currentRole == SharedBookRole.OWNER
+                canContributeToBook =
+                    currentRole == SharedBookRole.OWNER || currentRole == SharedBookRole.EDITOR
+                canManageMembers = currentRole == SharedBookRole.OWNER
 
-                binding.btnAddSharedRecipe.visibility = if (canContribute) View.VISIBLE else View.GONE
-                binding.btnShareExistingRecipe.visibility = if (canContribute) View.VISIBLE else View.GONE
-                binding.btnInviteMember.visibility = if (canContribute) View.VISIBLE else View.GONE
+                binding.btnAddSharedRecipe.visibility = if (canContributeToBook) View.VISIBLE else View.GONE
+                binding.btnShareExistingRecipe.visibility = if (canContributeToBook) View.VISIBLE else View.GONE
+                binding.btnMembers.visibility = View.VISIBLE
                 binding.btnLeaveBook.visibility =
                     if (currentUserId.isNotBlank() && currentUserId != book.ownerId) View.VISIBLE else View.GONE
 
-                recipesAdapter.setRemovalEnabled(canContribute)
-                membersAdapter.submitList(book.members(), canManage)
+                recipesAdapter.setRemovalEnabled(canContributeToBook)
             }
         }
 
@@ -129,7 +132,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
             addView(roleSpinner)
         }
 
-        AlertDialog.Builder(context)
+        MaterialAlertDialogBuilder(context)
             .setTitle("Invite Member")
             .setView(container)
             .setPositiveButton("Send") { _, _ ->
@@ -140,6 +143,35 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun showMembersDialog() {
+        val book = currentBook ?: return
+        val dialogBinding = DialogSharedMembersBinding.inflate(layoutInflater)
+        val membersAdapter = SharedMembersAdapter(::showManageMemberDialog)
+
+        dialogBinding.rvMembersDialog.layoutManager = LinearLayoutManager(requireContext())
+        dialogBinding.rvMembersDialog.adapter = membersAdapter
+        membersAdapter.submitList(book.members(), canManageMembers)
+
+        dialogBinding.tvMembersEmpty.visibility =
+            if (book.members().isEmpty()) View.VISIBLE else View.GONE
+        dialogBinding.btnInviteMemberDialog.visibility =
+            if (canContributeToBook) View.VISIBLE else View.GONE
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Members")
+            .setView(dialogBinding.root)
+            .create()
+
+        dialogBinding.btnInviteMemberDialog.setOnClickListener {
+            dialog.dismiss()
+            showInviteDialog()
+        }
+        dialogBinding.btnCloseDialog.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showManageMemberDialog(member: SharedBookMember) {
@@ -154,7 +186,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
             setSelection(roles.indexOf(member.role).coerceAtLeast(0))
         }
 
-        AlertDialog.Builder(context)
+        MaterialAlertDialogBuilder(context)
             .setTitle(member.name)
             .setView(roleSpinner)
             .setPositiveButton("Save Role") { _, _ ->
@@ -179,7 +211,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
             recipe.title.ifBlank { "Untitled recipe" }
         }.toTypedArray()
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Share Existing Recipe")
             .setItems(labels) { _, which ->
                 viewModel.shareExistingRecipe(recipes[which])
@@ -189,7 +221,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
     }
 
     private fun confirmLeaveBook() {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Leave shared book?")
             .setMessage("You will lose access to recipes in this book.")
             .setPositiveButton("Leave") { _, _ ->
@@ -200,7 +232,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
     }
 
     private fun confirmRemoveRecipe(recipe: Recipe) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Remove recipe from book?")
             .setMessage("This will remove the recipe from this recipe book.")
             .setPositiveButton("Remove") { _, _ ->
