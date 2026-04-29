@@ -6,13 +6,13 @@ import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.bumptech.glide.Glide
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentProfileBinding
@@ -22,6 +22,7 @@ import com.example.recipebookappandorid.model.SharedRecipeBook
 import com.example.recipebookappandorid.viewmodel.AuthViewModel
 import com.example.recipebookappandorid.viewmodel.MyRecipesViewModel
 import com.example.recipebookappandorid.viewmodel.ProfileViewModel
+import com.example.recipebookappandorid.viewmodel.RecipeViewModel
 import com.example.recipebookappandorid.viewmodel.SharedBooksViewModel
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
@@ -32,6 +33,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private val authViewModel: AuthViewModel by viewModels()
     private val profileViewModel: ProfileViewModel by viewModels()
     private val myRecipesViewModel: MyRecipesViewModel by viewModels()
+    private val recipeViewModel: RecipeViewModel by viewModels()
     private val sharedBooksViewModel: SharedBooksViewModel by viewModels()
 
     private lateinit var myRecipesAdapter: MyRecipesAdapter
@@ -62,6 +64,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     override fun onResume() {
         super.onResume()
         profileViewModel.loadCurrentUser()
+        myRecipesViewModel.sync()
         sharedBooksViewModel.sync()
     }
 
@@ -111,13 +114,26 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         sharedBooksViewModel.message.observe(viewLifecycleOwner) { message ->
             if (!message.isNullOrBlank()) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+            }
+        }
+
+        recipeViewModel.deleteSuccess.observe(viewLifecycleOwner) { success ->
+            if (success) {
+                Snackbar.make(binding.root, "Recipe removed from your book", Snackbar.LENGTH_LONG).show()
+            }
+        }
+
+        recipeViewModel.saveError.observe(viewLifecycleOwner) { error ->
+            if (!error.isNullOrBlank()) {
+                Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
             }
         }
     }
 
     private fun setupLists() {
-        myRecipesAdapter = MyRecipesAdapter(::openRecipe)
+        myRecipesAdapter = MyRecipesAdapter(::openRecipe, ::confirmRemoveRecipe)
+        myRecipesAdapter.setRemovalEnabled(true)
         binding.rvMyRecipes.layoutManager = LinearLayoutManager(requireContext())
         binding.rvMyRecipes.adapter = myRecipesAdapter
 
@@ -209,34 +225,49 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     }
 
     private fun openRecipe(recipe: Recipe) {
-        val action = ProfileFragmentDirections.actionProfileFragmentToRecipeDetailsFragment(
-            id = recipe.id,
-            description = recipe.description,
-            imageUrl = recipe.imageUrl,
-            title = recipe.title,
-            authorId = recipe.authorId,
-            authorName = recipe.authorName,
-            prepTime = recipe.prepTime,
-            difficulty = recipe.difficulty,
-            category = recipe.category,
-            ingredients = recipe.ingredients,
-            steps = recipe.steps,
-            notes = recipe.notes,
-            sharedBookId = recipe.sharedBookId,
-            sharedBookName = recipe.sharedBookName,
-            sharedWithUserIds = recipe.sharedWithUserIds.toTypedArray(),
-            sharedRole = recipe.sharedRole,
-            isRemote = false
+        findNavController().navigate(
+            R.id.recipeDetailsFragment,
+            Bundle().apply {
+                putString("id", recipe.id)
+                putString("description", recipe.description)
+                putString("imageUrl", recipe.imageUrl)
+                putString("title", recipe.title)
+                putString("authorId", recipe.authorId)
+                putString("authorName", recipe.authorName)
+                putString("prepTime", recipe.prepTime)
+                putString("difficulty", recipe.difficulty)
+                putString("category", recipe.category)
+                putString("ingredients", recipe.ingredients)
+                putString("steps", recipe.steps)
+                putString("notes", recipe.notes)
+                putString("sharedBookId", recipe.sharedBookId)
+                putString("sharedBookName", recipe.sharedBookName)
+                putStringArray("sharedWithUserIds", recipe.sharedWithUserIds.toTypedArray())
+                putString("sharedRole", recipe.sharedRole)
+                putBoolean("isRemote", false)
+            }
         )
-        findNavController().navigate(action)
     }
 
     private fun openBook(book: SharedRecipeBook) {
-        val action = ProfileFragmentDirections.actionProfileFragmentToSharedBookDetailsFragment(
-            bookId = book.id,
-            bookName = book.name
+        findNavController().navigate(
+            R.id.sharedBookDetailsFragment,
+            Bundle().apply {
+                putString("bookId", book.id)
+                putString("bookName", book.name)
+            }
         )
-        findNavController().navigate(action)
+    }
+
+    private fun confirmRemoveRecipe(recipe: Recipe) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Remove recipe?")
+            .setMessage("This will remove the recipe from your personal recipe book.")
+            .setPositiveButton("Remove") { _, _ ->
+                recipeViewModel.deleteRecipe(recipe.id)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun com.example.recipebookappandorid.model.User.toUsername(): String {

@@ -9,10 +9,12 @@ import com.example.recipebookappandorid.databinding.ItemMyRecipeBinding
 import com.example.recipebookappandorid.model.Recipe
 
 class MyRecipesAdapter(
-    private val onRecipeClick: (Recipe) -> Unit
+    private val onRecipeClick: (Recipe) -> Unit,
+    private val onRemoveRecipeClick: ((Recipe) -> Unit)? = null
 ) : RecyclerView.Adapter<MyRecipesAdapter.ViewHolder>() {
 
     private val recipes = mutableListOf<Recipe>()
+    private var removalEnabled = onRemoveRecipeClick != null
 
     inner class ViewHolder(val binding: ItemMyRecipeBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -40,6 +42,11 @@ class MyRecipesAdapter(
             .error(R.drawable.ic_recipe_placeholder)
             .into(holder.binding.ivRecipeImage)
 
+        holder.binding.btnRemoveRecipe.visibility =
+            if (removalEnabled && onRemoveRecipeClick != null) ViewGroup.VISIBLE else ViewGroup.GONE
+        holder.binding.btnRemoveRecipe.setOnClickListener {
+            onRemoveRecipeClick?.invoke(recipe)
+        }
         holder.itemView.setOnClickListener { onRecipeClick(recipe) }
     }
 
@@ -48,6 +55,12 @@ class MyRecipesAdapter(
     fun submitList(newRecipes: List<Recipe>) {
         recipes.clear()
         recipes.addAll(newRecipes)
+        notifyDataSetChanged()
+    }
+
+    fun setRemovalEnabled(enabled: Boolean) {
+        if (removalEnabled == enabled) return
+        removalEnabled = enabled
         notifyDataSetChanged()
     }
 }

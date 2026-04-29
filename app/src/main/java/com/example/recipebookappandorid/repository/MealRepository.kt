@@ -81,6 +81,7 @@ class MealRepository {
             ingredients = IngredientsCodec.encode(ingredientItems),
             steps = strInstructions.orEmpty(),
             notes = strArea?.takeIf { it.isNotBlank() }?.let { "Cuisine: $it" }.orEmpty(),
+            sourceRecipeId = "remote_$id",
             authorId = "themealdb",
             authorName = "TheMealDB",
             createdAt = 0L

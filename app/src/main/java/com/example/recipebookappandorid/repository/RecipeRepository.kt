@@ -24,12 +24,49 @@ class RecipeRepository(context: Context) {
         return recipeDao.getAllRecipes().map { list -> list.map { it.toModel() } }
     }
 
+    fun getRecentlyViewedRecipes(limit: Int = 10): LiveData<List<Recipe>> {
+        return recipeDao.getRecentlyViewedRecipes(limit).map { list -> list.map { it.toModel() } }
+    }
+
     suspend fun getMyRecipes(authorId: String): List<Recipe> {
         return recipeDao.getRecipesByAuthor(authorId).map { it.toModel() }
     }
 
+    suspend fun removeDuplicateRecipesForBooks(authorId: String, bookIds: Set<String>) {
+        if (bookIds.isEmpty()) return
+
+        val duplicates = recipeDao.getRecipesByAuthor(authorId)
+            .map { it.toModel() }
+            .filter { it.sharedBookId in bookIds }
+            .groupBy { recipe ->
+                val canonicalSource = recipe.sourceRecipeId
+                    .ifBlank { recipe.title.trim().lowercase() }
+                "${recipe.sharedBookId}|$canonicalSource"
+            }
+            .values
+            .flatMap { recipes ->
+                recipes.sortedByDescending { it.createdAt }.drop(1)
+            }
+
+        duplicates.forEach { duplicate ->
+            deleteRecipe(duplicate.id)
+        }
+    }
+
     suspend fun getRecipeById(recipeId: String): Recipe? {
         return recipeDao.getRecipeById(recipeId)?.toModel()
+    }
+
+    suspend fun recipeExistsInAnyBook(sourceRecipeId: String, title: String, excludeRecipeId: String = ""): Boolean {
+        val candidates = buildList {
+            if (sourceRecipeId.isNotBlank()) {
+                addAll(recipeDao.getRecipesBySourceRecipeId(sourceRecipeId))
+            }
+            if (isEmpty()) {
+                addAll(recipeDao.getRecipesByTitle(title))
+            }
+        }
+        return candidates.any { it.id != excludeRecipeId }
     }
 
     suspend fun updateRecipe(recipe: Recipe) {
@@ -40,6 +77,10 @@ class RecipeRepository(context: Context) {
     suspend fun deleteRecipe(recipeId: String) {
         recipeDao.deleteRecipeById(recipeId)
         recipesCollection.document(recipeId).delete().await()
+    }
+
+    suspend fun markRecipeViewed(recipeId: String, viewedAt: Long = System.currentTimeMillis()) {
+        recipeDao.updateLastViewedAt(recipeId, viewedAt)
     }
 
     suspend fun shareRecipeWithEmail(recipeId: String, email: String) {
@@ -56,6 +97,13 @@ class RecipeRepository(context: Context) {
     }
 
     suspend fun syncSharedRecipesFromCloud(userId: String, userEmail: String) {
+        val ownRecipes = recipesCollection
+            .whereEqualTo("authorId", userId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(Recipe::class.java) }
+
         val sharedByUserId = recipesCollection
             .whereArrayContains("sharedWithUserIds", userId)
             .get()
@@ -74,9 +122,20 @@ class RecipeRepository(context: Context) {
             emptyList()
         }
 
-        val combined = (sharedByUserId + sharedByEmail).distinctBy { it.id }
-        recipeDao.clearRecipes()
+        val existingViewedTimestamps = getAllRecipes().value
+            .orEmpty()
+            .associate { it.id to it.lastViewedAt }
+
+        val combined = (ownRecipes + sharedByUserId + sharedByEmail)
+            .distinctBy { it.id }
+            .map { recipe ->
+                recipe.copy(lastViewedAt = existingViewedTimestamps[recipe.id] ?: recipe.lastViewedAt)
+            }
         recipeDao.insertRecipes(combined.map { it.toEntity() })
+    }
+
+    suspend fun syncRecipesForCurrentUser(userId: String, userEmail: String) {
+        syncSharedRecipesFromCloud(userId, userEmail)
     }
 
     private fun Recipe.toEntity(): RecipeEntity {
@@ -91,6 +150,7 @@ class RecipeRepository(context: Context) {
             ingredients = ingredients,
             steps = steps,
             notes = notes,
+            sourceRecipeId = sourceRecipeId,
             authorId = authorId,
             authorName = authorName,
             sharedBookId = sharedBookId,
@@ -98,6 +158,7 @@ class RecipeRepository(context: Context) {
             sharedWithUserIds = sharedWithUserIds,
             sharedRole = sharedRole,
             createdAt = createdAt,
+            lastViewedAt = lastViewedAt,
             sharedWith = sharedWith.joinToString(",")
         )
     }
@@ -114,6 +175,7 @@ class RecipeRepository(context: Context) {
             ingredients = ingredients,
             steps = steps,
             notes = notes,
+            sourceRecipeId = sourceRecipeId,
             authorId = authorId,
             authorName = authorName,
             sharedBookId = sharedBookId,
@@ -121,6 +183,7 @@ class RecipeRepository(context: Context) {
             sharedWithUserIds = sharedWithUserIds,
             sharedRole = sharedRole,
             createdAt = createdAt,
+            lastViewedAt = lastViewedAt,
             sharedWith = if (sharedWith.isBlank()) emptyList() else sharedWith.split(",")
         )
     }

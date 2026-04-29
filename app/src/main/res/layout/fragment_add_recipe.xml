@@ -101,6 +101,24 @@
                         android:layout_height="wrap_content" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <ImageView
+                    android:id="@+id/ivRecipePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:layout_marginTop="16dp"
+                    android:adjustViewBounds="true"
+                    android:background="@drawable/bg_soft_card"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_recipe_placeholder" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSelectRecipeImage"
+                    style="@style/Widget.RecipeBook.SecondaryButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Select Recipe Image" />
+
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/prepTimeInputLayout"
                     style="@style/Widget.RecipeBook.DropdownLayout"
@@ -238,6 +256,16 @@
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="20dp"
         android:text="Save Recipe"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressSaveRecipe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="88dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

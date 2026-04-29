@@ -6,11 +6,11 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentSharedBookDetailsBinding
 import com.example.recipebookappandorid.model.Recipe
@@ -37,7 +37,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
             findNavController().navigateUp()
         }
 
-        recipesAdapter = MyRecipesAdapter(::openRecipe)
+        recipesAdapter = MyRecipesAdapter(::openRecipe, ::confirmRemoveRecipe)
         binding.rvSharedBookRecipes.layoutManager = LinearLayoutManager(requireContext())
         binding.rvSharedBookRecipes.adapter = recipesAdapter
 
@@ -81,6 +81,7 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
                 binding.btnLeaveBook.visibility =
                     if (currentUserId.isNotBlank() && currentUserId != book.ownerId) View.VISIBLE else View.GONE
 
+                recipesAdapter.setRemovalEnabled(canContribute)
                 membersAdapter.submitList(book.members(), canManage)
             }
         }
@@ -100,9 +101,10 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
 
         viewModel.message.observe(viewLifecycleOwner) { message ->
             if (!message.isNullOrBlank()) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
                 if (message == "You left the book") {
                     findNavController().navigateUp()
+                } else {
+                    Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
                 }
             }
         }
@@ -168,7 +170,8 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
     private fun showShareExistingDialog() {
         val recipes = viewModel.shareableRecipes.value.orEmpty()
         if (recipes.isEmpty()) {
-            Toast.makeText(requireContext(), "No personal recipes available to share", Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, "No personal recipes available to share", Snackbar.LENGTH_LONG)
+                .show()
             return
         }
 
@@ -191,6 +194,17 @@ class SharedBookDetailsFragment : Fragment(R.layout.fragment_shared_book_details
             .setMessage("You will lose access to recipes in this book.")
             .setPositiveButton("Leave") { _, _ ->
                 viewModel.leaveBook()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun confirmRemoveRecipe(recipe: Recipe) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Remove recipe from book?")
+            .setMessage("This will remove the recipe from this recipe book.")
+            .setPositiveButton("Remove") { _, _ ->
+                viewModel.removeRecipeFromBook(recipe)
             }
             .setNegativeButton("Cancel", null)
             .show()

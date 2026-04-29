@@ -1,12 +1,15 @@
 package com.example.recipebookappandorid.ui.recipes
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
+import com.google.android.material.snackbar.Snackbar
 import com.example.recipebookappandorid.databinding.ItemIngredientInputBinding
 import com.example.recipebookappandorid.model.IngredientItem
 import com.example.recipebookappandorid.R
@@ -23,6 +26,17 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
 
     private val viewModel: RecipeViewModel by viewModels()
     private val ingredientRows = mutableListOf<ItemIngredientInputBinding>()
+    private var selectedImageUri: Uri? = null
+
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        val currentBinding = _binding ?: return@registerForActivityResult
+        uri?.let {
+            selectedImageUri = it
+            renderRecipeImage(localUri = it, remoteUrl = null, bindingOverride = currentBinding)
+        }
+    }
 
     private fun setupDropdowns() {
         val prepTimes = listOf(
@@ -71,8 +85,12 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         navArgs = AddRecipeFragmentArgs.fromBundle(requireArguments())
 
         setupDropdowns()
+        renderRecipeImage(localUri = null, remoteUrl = navArgs.imageUrl)
         binding.btnBack.setOnClickListener {
             navigateBack(navArgs)
+        }
+        binding.btnSelectRecipeImage.setOnClickListener {
+            imagePickerLauncher.launch("image/*")
         }
         binding.btnAddIngredient.setOnClickListener {
             addIngredientRow()
@@ -104,6 +122,7 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
                     ingredients = ingredients,
                     steps = steps,
                     notes = notes,
+                    imageUri = selectedImageUri,
                     sharedBookId = navArgs.sharedBookId,
                     sharedBookName = navArgs.sharedBookName
                 )
@@ -117,6 +136,7 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
                     ingredients = ingredients,
                     steps = steps,
                     notes = notes,
+                    imageUri = selectedImageUri,
                     sharedBookId = navArgs.sharedBookId,
                     sharedBookName = navArgs.sharedBookName
                 )
@@ -158,14 +178,24 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
 
         viewModel.saveSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
-                Toast.makeText(requireContext(), "Recipe saved", Toast.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Recipe saved", Snackbar.LENGTH_SHORT)
+                    .setAnchorView(binding.btnSaveRecipe)
+                    .show()
             }
         }
 
         viewModel.saveError.observe(viewLifecycleOwner) { error ->
             if (!error.isNullOrBlank()) {
-                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG)
+                    .setAnchorView(binding.btnSaveRecipe)
+                    .show()
             }
+        }
+
+        viewModel.isSaving.observe(viewLifecycleOwner) { isSaving ->
+            binding.btnSaveRecipe.isEnabled = !isSaving
+            binding.btnSelectRecipeImage.isEnabled = !isSaving
+            binding.progressSaveRecipe.visibility = if (isSaving) View.VISIBLE else View.GONE
         }
 
         viewModel.savedRecipe.observe(viewLifecycleOwner) { recipe ->
@@ -231,6 +261,20 @@ class AddRecipeFragment : Fragment(R.layout.fragment_add_recipe) {
         binding.etSteps.setText(args.steps)
         binding.etNotes.setText(args.notes)
         binding.btnSaveRecipe.text = "Save Changes"
+    }
+
+    private fun renderRecipeImage(
+        localUri: Uri?,
+        remoteUrl: String?,
+        bindingOverride: FragmentAddRecipeBinding? = _binding
+    ) {
+        val currentBinding = bindingOverride ?: return
+        Glide.with(this)
+            .load(localUri ?: remoteUrl?.ifBlank { null })
+            .placeholder(R.drawable.ic_recipe_placeholder)
+            .error(R.drawable.ic_recipe_placeholder)
+            .centerCrop()
+            .into(currentBinding.ivRecipePreview)
     }
 
     private fun addIngredientRow(ingredient: IngredientItem = IngredientItem()) {

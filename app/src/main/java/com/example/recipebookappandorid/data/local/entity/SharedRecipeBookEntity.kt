@@ -14,5 +14,6 @@ data class SharedRecipeBookEntity(
     val memberNames: List<String>,
     val memberEmails: List<String>,
     val memberRoles: List<String>,
-    val createdAt: Long
+    val createdAt: Long,
+    val isPrivate: Boolean
 )

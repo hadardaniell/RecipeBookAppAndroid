@@ -1,6 +1,7 @@
 package com.example.recipebookappandorid.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,6 +12,7 @@ import com.example.recipebookappandorid.model.SharedBookRole
 import com.example.recipebookappandorid.repository.AuthRepository
 import com.example.recipebookappandorid.repository.RecipeRepository
 import com.example.recipebookappandorid.repository.SharedRecipeBookRepository
+import com.example.recipebookappandorid.repository.StorageRepository
 import com.example.recipebookappandorid.repository.UserRepository
 import com.example.recipebookappandorid.util.IngredientsCodec
 import com.example.recipebookappandorid.validation.RecipeFormValidator
@@ -23,6 +25,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository(application)
     private val sharedRecipeBookRepository = SharedRecipeBookRepository(application)
+    private val storageRepository = StorageRepository()
 
     private val _titleError = MutableLiveData<String?>()
     val titleError: LiveData<String?> = _titleError
@@ -60,6 +63,9 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val _deleteSuccess = MutableLiveData<Boolean>()
     val deleteSuccess: LiveData<Boolean> = _deleteSuccess
 
+    private val _isSaving = MutableLiveData(false)
+    val isSaving: LiveData<Boolean> = _isSaving
+
     fun addRecipe(
         title: String,
         description: String,
@@ -69,6 +75,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         ingredients: List<IngredientItem>,
         steps: String,
         notes: String,
+        imageUri: Uri? = null,
         sharedBookId: String = "",
         sharedBookName: String = ""
     ) {
@@ -110,40 +117,54 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         val uid = firebaseUser.uid
 
         viewModelScope.launch {
+            _isSaving.postValue(true)
             val currentUser = userRepository.getUser(uid)
             val sharedBook = if (sharedBookId.isNotBlank()) {
                 sharedRecipeBookRepository.getBookById(sharedBookId)
             } else {
-                null
+                sharedRecipeBookRepository.ensurePrivateBook(
+                    userId = uid,
+                    email = firebaseUser.email.orEmpty(),
+                    displayName = currentUser?.name.orEmpty()
+                )
             }
 
-            val recipe = Recipe(
-                id = UUID.randomUUID().toString(),
-                title = title,
-                description = description,
-                imageUrl = "",
-                prepTime = prepTime,
-                difficulty = difficulty,
-                category = category,
-                ingredients = encodedIngredients,
-                steps = steps,
-                notes = notes,
-                authorId = uid,
-                authorName = currentUser?.name ?: firebaseUser.email ?: "Unknown",
-                sharedBookId = sharedBook?.id ?: sharedBookId,
-                sharedBookName = sharedBook?.name ?: sharedBookName,
-                sharedWithUserIds = sharedBook?.memberIds ?: listOf(uid),
-                sharedRole = sharedBook?.roleFor(uid) ?: SharedBookRole.OWNER,
-                createdAt = System.currentTimeMillis()
-            )
-
             runCatching {
+                val uploadedImageUrl = imageUri?.let {
+                    storageRepository.uploadRecipeImage(it)
+                        ?: throw IllegalStateException("Failed to upload recipe image")
+                }.orEmpty()
+                val newRecipeId = UUID.randomUUID().toString()
+
+                val recipe = Recipe(
+                    id = newRecipeId,
+                    title = title,
+                    description = description,
+                    imageUrl = uploadedImageUrl,
+                    prepTime = prepTime,
+                    difficulty = difficulty,
+                    category = category,
+                    ingredients = encodedIngredients,
+                    steps = steps,
+                    notes = notes,
+                    sourceRecipeId = newRecipeId,
+                    authorId = uid,
+                    authorName = currentUser?.name ?: firebaseUser.email ?: "Unknown",
+                    sharedBookId = sharedBook?.id ?: sharedBookId,
+                    sharedBookName = if (sharedBook?.`private` == true) "" else (sharedBook?.name ?: sharedBookName),
+                    sharedWithUserIds = sharedBook?.memberIds ?: listOf(uid),
+                    sharedRole = sharedBook?.roleFor(uid) ?: SharedBookRole.OWNER,
+                    createdAt = System.currentTimeMillis()
+                )
                 recipeRepository.saveRecipe(recipe)
+                recipe
             }.onSuccess {
-                _savedRecipe.postValue(recipe)
+                _savedRecipe.postValue(it)
                 _saveSuccess.postValue(true)
             }.onFailure { exception ->
                 _saveError.postValue(exception.message ?: "Failed to save recipe")
+            }.also {
+                _isSaving.postValue(false)
             }
         }
     }
@@ -159,17 +180,33 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch {
             val currentUser = userRepository.getUser(uid)
+            val privateBook = sharedRecipeBookRepository.ensurePrivateBook(
+                userId = uid,
+                email = firebaseUser.email.orEmpty(),
+                displayName = currentUser?.name.orEmpty()
+            )
+            val sourceRecipeId = recipe.sourceRecipeId.ifBlank { recipe.id }
+            if (recipeRepository.recipeExistsInAnyBook(sourceRecipeId, recipe.title)) {
+                _saveError.postValue("This recipe already appears in one of your books")
+                return@launch
+            }
             val importedRecipe = recipe.copy(
                 id = UUID.randomUUID().toString(),
                 authorId = uid,
                 authorName = currentUser?.name ?: firebaseUser.email ?: "My Recipe",
-                sharedWithUserIds = listOf(uid),
+                sourceRecipeId = sourceRecipeId,
+                sharedBookId = privateBook.id,
+                sharedBookName = "",
+                sharedWithUserIds = privateBook.memberIds,
                 sharedRole = SharedBookRole.OWNER,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                lastViewedAt = 0L,
+                sharedWith = emptyList()
             )
 
             runCatching {
                 recipeRepository.saveRecipe(importedRecipe)
+                recipeRepository.syncRecipesForCurrentUser(uid, firebaseUser.email.orEmpty())
             }.onSuccess {
                 _importSuccess.postValue(true)
             }.onFailure { exception ->
@@ -208,6 +245,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         ingredients: List<IngredientItem>,
         steps: String,
         notes: String,
+        imageUri: Uri?,
         sharedBookId: String,
         sharedBookName: String
     ) {
@@ -248,39 +286,53 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         val encodedIngredients = IngredientsCodec.encode(ingredients)
 
         viewModelScope.launch {
+            _isSaving.postValue(true)
             val currentUser = userRepository.getUser(firebaseUser.uid)
             val sharedBook = if (sharedBookId.isNotBlank()) {
                 sharedRecipeBookRepository.getBookById(sharedBookId)
             } else {
-                null
+                sharedRecipeBookRepository.ensurePrivateBook(
+                    userId = firebaseUser.uid,
+                    email = firebaseUser.email.orEmpty(),
+                    displayName = currentUser?.name.orEmpty()
+                )
             }
-            val recipe = Recipe(
-                id = recipeId,
-                title = title,
-                description = description,
-                imageUrl = imageUrl,
-                prepTime = prepTime,
-                difficulty = difficulty,
-                category = category,
-                ingredients = encodedIngredients,
-                steps = steps,
-                notes = notes,
-                authorId = firebaseUser.uid,
-                authorName = currentUser?.name ?: firebaseUser.email ?: "My Recipe",
-                sharedBookId = sharedBook?.id ?: sharedBookId,
-                sharedBookName = sharedBook?.name ?: sharedBookName,
-                sharedWithUserIds = sharedBook?.memberIds ?: listOf(firebaseUser.uid),
-                sharedRole = sharedBook?.roleFor(firebaseUser.uid) ?: SharedBookRole.OWNER,
-                createdAt = System.currentTimeMillis()
-            )
 
             runCatching {
+                val resolvedImageUrl = imageUri?.let {
+                    storageRepository.uploadRecipeImage(it)
+                        ?: throw IllegalStateException("Failed to upload recipe image")
+                } ?: imageUrl
+
+                val recipe = Recipe(
+                    id = recipeId,
+                    title = title,
+                    description = description,
+                    imageUrl = resolvedImageUrl,
+                    prepTime = prepTime,
+                    difficulty = difficulty,
+                    category = category,
+                    ingredients = encodedIngredients,
+                    steps = steps,
+                    notes = notes,
+                    sourceRecipeId = recipeId,
+                    authorId = firebaseUser.uid,
+                    authorName = currentUser?.name ?: firebaseUser.email ?: "My Recipe",
+                    sharedBookId = sharedBook?.id ?: sharedBookId,
+                    sharedBookName = if (sharedBook?.`private` == true) "" else (sharedBook?.name ?: sharedBookName),
+                    sharedWithUserIds = sharedBook?.memberIds ?: listOf(firebaseUser.uid),
+                    sharedRole = sharedBook?.roleFor(firebaseUser.uid) ?: SharedBookRole.OWNER,
+                    createdAt = System.currentTimeMillis()
+                )
                 recipeRepository.updateRecipe(recipe)
+                recipe
             }.onSuccess {
-                _savedRecipe.postValue(recipe)
+                _savedRecipe.postValue(it)
                 _saveSuccess.postValue(true)
             }.onFailure { exception ->
                 _saveError.postValue(exception.message ?: "Failed to update recipe")
+            }.also {
+                _isSaving.postValue(false)
             }
         }
     }
@@ -295,6 +347,57 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 _deleteSuccess.postValue(true)
             }.onFailure { exception ->
                 _saveError.postValue(exception.message ?: "Failed to delete recipe")
+            }
+        }
+    }
+
+    fun shareRecipeToBookAsCopy(
+        recipe: Recipe,
+        bookId: String,
+        bookName: String,
+        memberIds: List<String>,
+        role: String
+    ) {
+        val firebaseUser = authRepository.getCurrentUser()
+        if (firebaseUser == null) {
+            _saveError.value = "You must be logged in"
+            return
+        }
+
+        viewModelScope.launch {
+            _isSaving.postValue(true)
+            runCatching {
+                val sourceRecipeId = recipe.sourceRecipeId.ifBlank { recipe.id }
+                if (recipeRepository.recipeExistsInAnyBook(sourceRecipeId, recipe.title)) {
+                    throw IllegalStateException("This recipe already appears in one of your books")
+                }
+                val copiedRecipe = recipe.copy(
+                    id = UUID.randomUUID().toString(),
+                    sourceRecipeId = sourceRecipeId,
+                    sharedBookId = bookId,
+                    sharedBookName = bookName,
+                    sharedWithUserIds = memberIds,
+                    sharedRole = role,
+                    createdAt = System.currentTimeMillis()
+                )
+                recipeRepository.saveRecipe(copiedRecipe)
+                copiedRecipe
+            }.onSuccess {
+                _saveSuccess.postValue(true)
+            }.onFailure { exception ->
+                _saveError.postValue(exception.message ?: "Failed to share recipe to book")
+            }.also {
+                _isSaving.postValue(false)
+            }
+        }
+    }
+
+    fun markRecipeViewed(recipeId: String) {
+        if (recipeId.isBlank()) return
+
+        viewModelScope.launch {
+            runCatching {
+                recipeRepository.markRecipeViewed(recipeId)
             }
         }
     }

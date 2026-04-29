@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.Recipe
 import com.example.recipebookappandorid.model.SharedBookMember
+import com.example.recipebookappandorid.model.SharedBookRole
 import com.example.recipebookappandorid.model.SharedRecipeBook
 import com.example.recipebookappandorid.model.User
 import com.example.recipebookappandorid.repository.AuthRepository
@@ -15,6 +16,7 @@ import com.example.recipebookappandorid.repository.RecipeRepository
 import com.example.recipebookappandorid.repository.SharedRecipeBookRepository
 import com.example.recipebookappandorid.repository.UserRepository
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class SharedBookDetailsViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -23,6 +25,7 @@ class SharedBookDetailsViewModel(application: Application) : AndroidViewModel(ap
     private val sharedRecipeBookRepository = SharedRecipeBookRepository(application)
     private val userRepository = UserRepository(application)
     private val allRecipes = recipeRepository.getAllRecipes()
+    private val allBooks = sharedRecipeBookRepository.getCachedBooks()
     private val selectedBookId = MutableLiveData<String>()
 
     private val _book = MutableLiveData<SharedRecipeBook?>()
@@ -157,18 +160,51 @@ class SharedBookDetailsViewModel(application: Application) : AndroidViewModel(ap
             _isLoading.postValue(true)
             runCatching {
                 val role = book.roleFor(firebaseUser.uid).orEmpty()
-                val updatedRecipe = recipe.copy(
+                val sourceRecipeId = recipe.sourceRecipeId.ifBlank { recipe.id }
+                if (recipeRepository.recipeExistsInAnyBook(sourceRecipeId, recipe.title)) {
+                    throw IllegalStateException("This recipe already appears in one of your books")
+                }
+                val copiedRecipe = recipe.copy(
+                    id = UUID.randomUUID().toString(),
+                    sourceRecipeId = sourceRecipeId,
                     sharedBookId = book.id,
                     sharedBookName = book.name,
                     sharedWithUserIds = book.memberIds,
-                    sharedRole = role
+                    sharedRole = role,
+                    createdAt = System.currentTimeMillis()
                 )
-                recipeRepository.updateRecipe(updatedRecipe)
+                recipeRepository.saveRecipe(copiedRecipe)
                 refreshShareableRecipes(book.id)
             }.onSuccess {
                 _message.postValue("Recipe shared to book")
             }.onFailure { exception ->
                 _message.postValue(exception.message ?: "Failed to share recipe")
+            }
+            _isLoading.postValue(false)
+        }
+    }
+
+    fun removeRecipeFromBook(recipe: Recipe) {
+        val firebaseUser = authRepository.getCurrentUser() ?: return
+        val book = _book.value ?: return
+        val role = book.roleFor(firebaseUser.uid).orEmpty()
+        val canRemove = recipe.authorId == firebaseUser.uid ||
+            role == SharedBookRole.OWNER ||
+            role == SharedBookRole.EDITOR
+        if (!canRemove) {
+            _message.value = "You do not have permission to remove this recipe"
+            return
+        }
+
+        viewModelScope.launch {
+            _isLoading.postValue(true)
+            runCatching {
+                recipeRepository.deleteRecipe(recipe.id)
+                refreshShareableRecipes(book.id)
+            }.onSuccess {
+                _message.postValue("Recipe removed from book")
+            }.onFailure { exception ->
+                _message.postValue(exception.message ?: "Failed to remove recipe from book")
             }
             _isLoading.postValue(false)
         }
@@ -180,11 +216,15 @@ class SharedBookDetailsViewModel(application: Application) : AndroidViewModel(ap
         _shareableRecipes.postValue(
             allRecipes.value.orEmpty()
                 .filter { recipe ->
-                    recipe.authorId == currentUserId &&
-                        (recipe.sharedBookId.isBlank() || recipe.sharedBookId == bookId)
+                    recipe.authorId == currentUserId && isPersonalRecipe(recipe)
                 }
                 .sortedByDescending { it.createdAt }
         )
+    }
+
+    private fun isPersonalRecipe(recipe: Recipe): Boolean {
+        if (recipe.sharedBookId.isBlank()) return true
+        return allBooks.value.orEmpty().any { it.id == recipe.sharedBookId && it.`private` }
     }
 
     private suspend fun removeMemberAccessFromRecipes(memberId: String) {
