@@ -3,6 +3,9 @@
     <color name="cream_50">#FFF9F2</color>
     <color name="cream_100">#FFF1E3</color>
     <color name="cream_200">#FFE4CC</color>
+    <color name="chip_blue_50">#EEF9FF</color>
+    <color name="chip_blue_100">#DDF2FF</color>
+    <color name="chip_blue_200">#BFE7FB</color>
     <color name="navy_500">#22A9E0</color>
     <color name="navy_700">#1C8FC0</color>
     <color name="navy_900">#11414E</color>
