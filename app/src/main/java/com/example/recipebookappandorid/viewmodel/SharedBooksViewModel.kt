@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.example.recipebookappandorid.model.SharedBookInvite
 import com.example.recipebookappandorid.model.SharedBookRole
@@ -20,7 +21,9 @@ class SharedBooksViewModel(application: Application) : AndroidViewModel(applicat
     private val userRepository = UserRepository(application)
     private val sharedRecipeBookRepository = SharedRecipeBookRepository(application)
 
-    val books: LiveData<List<SharedRecipeBook>> = sharedRecipeBookRepository.getCachedBooks()
+    val books: LiveData<List<SharedRecipeBook>> = sharedRecipeBookRepository.getCachedBooks().map { books ->
+        books.filterNot { it.`private` }
+    }
     val invites: LiveData<List<SharedBookInvite>> = sharedRecipeBookRepository.getCachedInvites()
 
     private val _isLoading = MutableLiveData(false)

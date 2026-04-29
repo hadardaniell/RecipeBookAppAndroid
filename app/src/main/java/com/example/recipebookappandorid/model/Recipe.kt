@@ -11,6 +11,7 @@ data class Recipe(
     val ingredients: String = "",
     val steps: String = "",
     val notes: String = "",
+    val sourceRecipeId: String = "",
     val authorId: String = "",
     val authorName: String = "",
     val sharedBookId: String = "",
@@ -18,5 +19,6 @@ data class Recipe(
     val sharedWithUserIds: List<String> = emptyList(),
     val sharedRole: String = "",
     val createdAt: Long = 0L,
+    val lastViewedAt: Long = 0L,
     val sharedWith: List<String> = emptyList()
 )

@@ -22,6 +22,7 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository()
     private val mealRepository = MealRepository()
     private val allRecipes = repository.getAllRecipes()
+    private val recentlyViewedRecipes = repository.getRecentlyViewedRecipes()
 
     private var remoteRecipes: List<Recipe> = emptyList()
     private var currentQuery: String = ""
@@ -42,6 +43,9 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
                 filterRecipes(recipes + remoteRecipes, currentQuery, selectedCategory)
             )
             updateEmptyState(value.orEmpty())
+        }
+        addSource(recentlyViewedRecipes) {
+            refreshSections()
         }
     }
 
@@ -147,6 +151,13 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
         val currentUserId = currentUser?.uid.orEmpty()
         val currentUserEmail = currentUser?.email.orEmpty().lowercase()
         val sections = mutableListOf<RecipeSection>()
+        val recentlyViewed = recentlyViewedRecipes.value.orEmpty()
+            .filter { viewedRecipe -> recipes.any { it.id == viewedRecipe.id } }
+            .take(10)
+
+        if (recentlyViewed.isNotEmpty() && currentQuery.isBlank() && selectedCategory == null) {
+            sections.add(RecipeSection(title = "Recently viewed", recipes = recentlyViewed))
+        }
 
         val sharedWithMe = recipes.filter { recipe ->
             recipe.authorId != currentUserId &&

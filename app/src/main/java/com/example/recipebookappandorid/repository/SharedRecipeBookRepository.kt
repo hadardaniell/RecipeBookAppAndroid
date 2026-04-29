@@ -34,6 +34,7 @@ class SharedRecipeBookRepository(context: Context) {
 
     suspend fun syncForUser(userId: String, email: String) {
         val normalizedEmail = email.trim().lowercase()
+        ensurePrivateBook(userId, normalizedEmail)
         val booksSnapshot = booksCollection
             .whereArrayContains("memberIds", userId)
             .get()
@@ -78,7 +79,8 @@ class SharedRecipeBookRepository(context: Context) {
             memberNames = listOf(ownerName),
             memberEmails = listOf(owner.email),
             memberRoles = listOf(SharedBookRole.OWNER),
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            `private` = invitations.isEmpty()
         )
 
         booksCollection.document(book.id).set(book).await()
@@ -89,6 +91,44 @@ class SharedRecipeBookRepository(context: Context) {
         }
 
         return book
+    }
+
+    suspend fun ensurePrivateBook(userId: String, email: String, displayName: String = ""): SharedRecipeBook {
+        val normalizedEmail = email.trim().lowercase()
+        val privateBookId = "private_$userId"
+        val existing = booksCollection.document(privateBookId)
+            .get()
+            .await()
+            .toObject(SharedRecipeBook::class.java)
+            ?.let { enrichBookOwner(it) }
+
+        if (existing != null) {
+            bookDao.insertBook(existing.toEntity())
+            return existing
+        }
+
+        val resolvedName = when {
+            displayName.isNotBlank() -> displayName
+            normalizedEmail.isNotBlank() -> normalizedEmail.substringBefore("@")
+            else -> "My recipes"
+        }
+
+        val privateBook = SharedRecipeBook(
+            id = privateBookId,
+            name = "My Recipe Book",
+            ownerId = userId,
+            ownerName = resolvedName,
+            memberIds = listOf(userId),
+            memberNames = listOf(resolvedName),
+            memberEmails = listOf(normalizedEmail),
+            memberRoles = listOf(SharedBookRole.OWNER),
+            createdAt = System.currentTimeMillis(),
+            `private` = true
+        )
+
+        booksCollection.document(privateBook.id).set(privateBook).await()
+        bookDao.insertBook(privateBook.toEntity())
+        return privateBook
     }
 
     suspend fun createInvite(
@@ -161,7 +201,15 @@ class SharedRecipeBookRepository(context: Context) {
         if (book.memberEmails.any { it.equals(inviteeEmail.trim(), ignoreCase = true) }) {
             throw IllegalArgumentException("This user is already a member")
         }
-        createInvite(book, inviter, inviteeEmail, role)
+        val publicBook = if (book.`private`) {
+            val updatedBook = book.copy(`private` = false)
+            booksCollection.document(bookId).set(updatedBook).await()
+            bookDao.insertBook(updatedBook.toEntity())
+            updatedBook
+        } else {
+            book
+        }
+        createInvite(publicBook, inviter, inviteeEmail, role)
     }
 
     suspend fun updateMemberRole(bookId: String, memberId: String, role: String): SharedRecipeBook {
@@ -217,13 +265,17 @@ class SharedRecipeBookRepository(context: Context) {
                 roles.add(SharedBookRole.EDITOR)
             }
             roles[index] = role
-            book.copy(memberRoles = roles)
+            book.copy(
+                memberRoles = roles,
+                `private` = memberCountAfterChange(existingMember = true, originalCount = book.memberIds.size)
+            )
         } else {
             book.copy(
                 memberIds = book.memberIds + user.uid,
                 memberNames = book.memberNames + user.name.ifBlank { user.email },
                 memberEmails = book.memberEmails + user.email,
-                memberRoles = book.memberRoles + role
+                memberRoles = book.memberRoles + role,
+                `private` = memberCountAfterChange(existingMember = false, originalCount = book.memberIds.size)
             )
         }
     }
@@ -232,12 +284,18 @@ class SharedRecipeBookRepository(context: Context) {
         val index = memberIds.indexOf(userId)
         if (index == -1) return this
 
-        return copy(
+        val updated = copy(
             memberIds = memberIds.toMutableList().also { it.removeAt(index) },
             memberNames = memberNames.toMutableList().also { if (it.size > index) it.removeAt(index) },
             memberEmails = memberEmails.toMutableList().also { if (it.size > index) it.removeAt(index) },
             memberRoles = memberRoles.toMutableList().also { if (it.size > index) it.removeAt(index) }
         )
+        return updated.copy(`private` = updated.memberIds.size <= 1)
+    }
+
+    private fun memberCountAfterChange(existingMember: Boolean, originalCount: Int): Boolean {
+        val resultingCount = if (existingMember) originalCount else originalCount + 1
+        return resultingCount <= 1
     }
 
     private suspend fun enrichBookOwner(book: SharedRecipeBook): SharedRecipeBook {
@@ -265,8 +323,14 @@ class SharedRecipeBookRepository(context: Context) {
     }
 
     private suspend fun resolveOwnerDisplayName(book: SharedRecipeBook): String {
+        if (book.ownerName.isNotBlank() && !book.ownerName.contains("@")) {
+            return book.ownerName
+        }
+
         val ownerByUid = book.ownerId.takeIf { it.isNotBlank() }?.let { ownerId ->
-            usersCollection.document(ownerId).get().await().toObject(User::class.java)
+            runCatching {
+                usersCollection.document(ownerId).get().await().toObject(User::class.java)
+            }.getOrNull()
         }
         if (ownerByUid?.name?.isNotBlank() == true) {
             return ownerByUid.name
@@ -275,23 +339,7 @@ class SharedRecipeBookRepository(context: Context) {
         val ownerEmail = book.ownerName.takeIf { it.contains("@") }
             ?: book.memberEmails.getOrNull(book.memberIds.indexOf(book.ownerId).coerceAtLeast(0))
 
-        val ownerByEmail = ownerEmail
-            ?.trim()
-            ?.lowercase()
-            ?.takeIf { it.isNotBlank() }
-            ?.let { email ->
-                usersCollection
-                    .whereEqualTo("email", email)
-                    .limit(1)
-                    .get()
-                    .await()
-                    .documents
-                    .firstOrNull()
-                    ?.toObject(User::class.java)
-            }
-
-        return ownerByEmail?.name?.takeIf { it.isNotBlank() }
-            ?: ownerByUid?.email?.substringBefore("@")
+        return ownerByUid?.email?.substringBefore("@")
             ?: ownerEmail?.substringBefore("@")
             ?: book.ownerName
     }
@@ -306,7 +354,8 @@ class SharedRecipeBookRepository(context: Context) {
             memberNames = memberNames,
             memberEmails = memberEmails,
             memberRoles = memberRoles,
-            createdAt = createdAt
+            createdAt = createdAt,
+            isPrivate = `private`
         )
     }
 
@@ -320,7 +369,8 @@ class SharedRecipeBookRepository(context: Context) {
             memberNames = memberNames,
             memberEmails = memberEmails,
             memberRoles = memberRoles,
-            createdAt = createdAt
+            createdAt = createdAt,
+            `private` = isPrivate
         )
     }
 

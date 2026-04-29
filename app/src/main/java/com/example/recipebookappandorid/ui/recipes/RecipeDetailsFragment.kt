@@ -12,6 +12,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.google.android.material.snackbar.Snackbar
 import com.example.recipebookappandorid.R
 import com.example.recipebookappandorid.databinding.FragmentRecipeDetailsBinding
 import com.example.recipebookappandorid.databinding.ItemIngredientDisplayBinding
@@ -57,6 +58,9 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
             sharedWithUserIds = args.sharedWithUserIds.toList(),
             sharedRole = args.sharedRole
         )
+        if (!args.isRemote) {
+            viewModel.markRecipeViewed(args.id)
+        }
 
         Glide.with(binding.ivRecipeImage)
             .load(args.imageUrl.ifBlank { null })
@@ -79,15 +83,17 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
         if (args.isRemote) {
             binding.btnImportRecipe.visibility = View.VISIBLE
             binding.layoutRecipeActions.visibility = View.GONE
+            binding.btnEditRecipe.visibility = View.GONE
             binding.btnShareRecipe.visibility = View.GONE
         } else {
             binding.btnImportRecipe.visibility = View.GONE
             binding.layoutRecipeActions.visibility = View.GONE
             binding.btnShareRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
+            binding.btnEditRecipe.visibility = View.GONE
 
             if (args.sharedBookId.isBlank()) {
                 binding.layoutRecipeActions.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
-                binding.btnDeleteRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
+                binding.btnEditRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
             } else {
                 viewLifecycleOwner.lifecycleScope.launch {
                     val book = SharedRecipeBookRepository(requireContext()).getBookById(args.sharedBookId)
@@ -97,7 +103,7 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
                         currentRole == SharedBookRole.EDITOR
                     if (_binding != null) {
                         binding.layoutRecipeActions.visibility = if (canEditRecipe) View.VISIBLE else View.GONE
-                        binding.btnDeleteRecipe.visibility = if (isMyRecipe) View.VISIBLE else View.GONE
+                        binding.btnEditRecipe.visibility = if (canEditRecipe) View.VISIBLE else View.GONE
                     }
                 }
             }
@@ -149,10 +155,6 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
             findNavController().navigate(action)
         }
 
-        binding.btnDeleteRecipe.setOnClickListener {
-            viewModel.deleteRecipe(args.id)
-        }
-
         binding.btnShareToBook.setOnClickListener {
             showShareToBookDialog()
         }
@@ -181,16 +183,12 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
 
         viewModel.saveError.observe(viewLifecycleOwner) { error ->
             if (!error.isNullOrBlank()) {
-                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG)
+                    .setAnchorView(binding.bottomActions)
+                    .show()
             }
         }
 
-        viewModel.deleteSuccess.observe(viewLifecycleOwner) { success ->
-            if (success) {
-                Toast.makeText(requireContext(), "Recipe deleted", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
-            }
-        }
     }
 
     private fun showShareDialog(recipeId: String) {
@@ -289,26 +287,12 @@ class RecipeDetailsFragment : Fragment(R.layout.fragment_recipe_details) {
     }
 
     private fun shareRecipeToBook(book: SharedRecipeBook, currentUserId: String) {
-        currentRecipe = currentRecipe.copy(
-            sharedBookId = book.id,
-            sharedBookName = book.name,
-            sharedWithUserIds = book.memberIds,
-            sharedRole = book.roleFor(currentUserId).orEmpty()
-        )
-
-        viewModel.updateRecipe(
-            recipeId = currentRecipe.id,
-            title = currentRecipe.title,
-            description = currentRecipe.description,
-            imageUrl = currentRecipe.imageUrl,
-            prepTime = currentRecipe.prepTime,
-            difficulty = currentRecipe.difficulty,
-            category = currentRecipe.category,
-            ingredients = IngredientsCodec.decode(currentRecipe.ingredients),
-            steps = currentRecipe.steps,
-            notes = currentRecipe.notes,
-            sharedBookId = currentRecipe.sharedBookId,
-            sharedBookName = currentRecipe.sharedBookName
+        viewModel.shareRecipeToBookAsCopy(
+            recipe = currentRecipe,
+            bookId = book.id,
+            bookName = book.name,
+            memberIds = book.memberIds,
+            role = book.roleFor(currentUserId).orEmpty()
         )
     }
 }

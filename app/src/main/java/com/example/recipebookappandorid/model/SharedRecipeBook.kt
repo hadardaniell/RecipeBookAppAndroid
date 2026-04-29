@@ -9,7 +9,8 @@ data class SharedRecipeBook(
     val memberNames: List<String> = emptyList(),
     val memberEmails: List<String> = emptyList(),
     val memberRoles: List<String> = emptyList(),
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    val `private`: Boolean = false
 ) {
     fun members(): List<SharedBookMember> {
         return memberIds.indices.map { index ->

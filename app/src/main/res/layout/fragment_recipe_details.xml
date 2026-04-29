@@ -51,6 +51,39 @@
                     app:icon="@drawable/ic_arrow_back_modern"
                     app:iconGravity="textStart"
                     app:iconPadding="0dp" />
+
+                <LinearLayout
+                    android:id="@+id/layoutTopActions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btnEditRecipe"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_soft_card"
+                        android:contentDescription="Edit recipe"
+                        android:padding="9dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:tint="@color/navy_700"
+                        android:visibility="gone" />
+
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btnShareRecipe"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_soft_card"
+                        android:contentDescription="Share recipe"
+                        android:padding="9dp"
+                        android:src="@android:drawable/ic_menu_share"
+                        android:tint="@color/navy_700"
+                        android:visibility="gone" />
+                </LinearLayout>
             </FrameLayout>
 
             <LinearLayout
@@ -267,41 +300,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Share To Book" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnEditRecipe"
-                    style="@style/Widget.RecipeBook.PrimaryButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Edit" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDeleteRecipe"
-                    style="@style/Widget.RecipeBook.SecondaryButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:text="Delete" />
-            </LinearLayout>
         </LinearLayout>
-
-        <!-- New Share Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnShareRecipe"
-            style="@style/Widget.RecipeBook.SecondaryButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Share with User"
-            app:icon="@android:drawable/ic_menu_share" />
 
     </LinearLayout>
 
