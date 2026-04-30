@@ -165,14 +165,8 @@ class FeedViewModel(application: Application) : AndroidViewModel(application) {
 
         if (recipes.isEmpty()) return sections
 
-        val sharedWithMe = recipes.filter { recipe ->
-            recipe.authorId != currentUserId &&
-                (recipe.sharedWithUserIds.contains(currentUserId) ||
-                    recipe.sharedWith.contains(currentUserEmail))
-        }
-        if (sharedWithMe.isNotEmpty()) {
-            sections.add(RecipeSection(title = "Shared with me", recipes = sharedWithMe))
-        }
+        // REMOVED "Shared with me" section from the Feed, as requested.
+        // The user can now find these recipes in their Profile under the "Shared" tab.
 
         val communityRecipes = recipes.filter {
             it.authorId != "themealdb" &&
