@@ -26,9 +26,9 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
     ) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
+            // Show the newly selected image immediately (without circleCrop because the XML CardView handles the radius)
             Glide.with(this)
                 .load(it)
-                .circleCrop() // Make sure the selected image is cropped to a circle immediately
                 .into(binding.ivProfileImage)
         }
     }
@@ -36,13 +36,6 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentEditProfileBinding.bind(view)
-
-        // The back button does not exist in the XML layout we provided earlier
-        // but if it's there it will work. Otherwise, the user uses the system back button.
-        // Let's wrap it in a try-catch or safe call just in case to prevent crashes if not present.
-        try {
-            // binding.btnBack.setOnClickListener { findNavController().navigateUp() }
-        } catch (e: Exception) { }
 
         binding.btnSelectImage.setOnClickListener {
             imagePickerLauncher.launch("image/*")
@@ -60,25 +53,22 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
     private fun observeViewModel() {
         viewModel.user.observe(viewLifecycleOwner) { user ->
             if (user != null) {
-                // Only set the text if it's currently empty to avoid overwriting user edits while loading
                 if (binding.etName.text.isNullOrEmpty()) {
                     binding.etName.setText(user.name)
                 }
                 binding.tvEmail.text = user.email
                 
+                // Only load from network if the user hasn't just picked a new local image
                 if (selectedImageUri == null) {
-                    if (user.profileImageUrl.isNotEmpty()) {
+                    if (user.profileImageUrl.isNotBlank()) {
                         Glide.with(this)
                             .load(user.profileImageUrl)
                             .placeholder(R.drawable.ic_recipe_placeholder)
-                            .fallback(R.drawable.ic_recipe_placeholder)
                             .error(R.drawable.ic_recipe_placeholder)
-                            .circleCrop()
                             .into(binding.ivProfileImage)
                     } else {
                         Glide.with(this)
                             .load(R.drawable.ic_recipe_placeholder)
-                            .circleCrop()
                             .into(binding.ivProfileImage)
                     }
                 }

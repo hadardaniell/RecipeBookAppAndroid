@@ -58,6 +58,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="28dp">
 
+                <!-- REMOVED THE ShapeAppearance from the ImageView so the CardView can just clip it perfectly -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -67,13 +68,12 @@
                     app:strokeColor="@color/chip_blue_200"
                     app:strokeWidth="2dp">
 
-                    <com.google.android.material.imageview.ShapeableImageView
+                    <ImageView
                         android:id="@+id/ivProfileImage"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:scaleType="centerCrop"
-                        android:src="@drawable/ic_profile_avatar_placeholder"
-                        app:shapeAppearance="@style/ShapeAppearance.RecipeBook.Pill" />
+                        android:src="@drawable/ic_profile_avatar_placeholder" />
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.button.MaterialButton
