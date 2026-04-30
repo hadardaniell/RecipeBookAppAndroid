@@ -101,46 +101,51 @@ class RecipeRepository(context: Context) {
 
         val localRecipe = getRecipeById(recipeId)
         if (localRecipe != null && !localRecipe.sharedWith.contains(normalizedEmail)) {
-            val updated = localRecipe.copy(sharedWith = localRecipe.sharedWith + normalizedEmail)
+            val updated = localRecipe.copy(sharedWith = localRecipe.sharedWith + listOf(normalizedEmail))
             recipeDao.updateRecipe(updated.toEntity())
         }
     }
 
     suspend fun syncSharedRecipesFromCloud(userId: String, userEmail: String) {
-        val ownRecipes = recipesCollection
-            .whereEqualTo("authorId", userId)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { it.toObject(Recipe::class.java) }
-
-        val sharedByUserId = recipesCollection
-            .whereArrayContains("sharedWithUserIds", userId)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { it.toObject(Recipe::class.java) }
-
-        val sharedByEmail = if (userEmail.isNotBlank()) {
-            recipesCollection
-                .whereArrayContains("sharedWith", userEmail.lowercase())
+        try {
+            val ownRecipes = recipesCollection
+                .whereEqualTo("authorId", userId)
                 .get()
                 .await()
                 .documents
                 .mapNotNull { it.toObject(Recipe::class.java) }
-        } else {
-            emptyList()
-        }
 
-        val existingViewedTimestamps = recipeDao.getAllRecipesOnce()
-            .associate { it.id to it.lastViewedAt }
+            val sharedByUserId = recipesCollection
+                .whereArrayContains("sharedWithUserIds", userId)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.toObject(Recipe::class.java) }
 
-        val combined = (ownRecipes + sharedByUserId + sharedByEmail)
-            .distinctBy { it.id }
-            .map { recipe ->
-                recipe.copy(lastViewedAt = existingViewedTimestamps[recipe.id] ?: recipe.lastViewedAt)
+            val sharedByEmail = if (userEmail.isNotBlank()) {
+                recipesCollection
+                    .whereArrayContains("sharedWith", userEmail.lowercase())
+                    .get()
+                    .await()
+                    .documents
+                    .mapNotNull { it.toObject(Recipe::class.java) }
+            } else {
+                emptyList()
             }
-        recipeDao.insertRecipes(combined.map { it.toEntity() })
+
+            val existingViewedTimestamps = recipeDao.getAllRecipesOnce()
+                .associate { it.id to it.lastViewedAt }
+
+            val combined = (ownRecipes + sharedByUserId + sharedByEmail)
+                .distinctBy { it.id }
+                .map { recipe ->
+                    recipe.copy(lastViewedAt = existingViewedTimestamps[recipe.id] ?: recipe.lastViewedAt)
+                }
+            
+            recipeDao.insertRecipes(combined.map { it.toEntity() })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     suspend fun syncRecipesForCurrentUser(userId: String, userEmail: String) {

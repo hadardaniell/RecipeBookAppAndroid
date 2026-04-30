@@ -112,16 +112,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             val normalizedEmail = email.trim().lowercase()
-            try {
-                val existingUser = userRepository.findUserByEmail(normalizedEmail)
-                if (existingUser != null) {
-                    _loading.postValue(false)
-                    _emailError.postValue("This email address is already registered")
-                    return@launch
-                }
-            } catch (e: Exception) {
-                // Ignore network issues for pre-validation and just proceed to auth
-            }
 
             authRepository.register(
                 email = normalizedEmail,
@@ -144,16 +134,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                         } catch (e: Exception) {
                             e.printStackTrace()
                             _loading.postValue(false)
-                            // Sometimes firestore fails due to rules, but Auth succeeded.
-                            _registerError.postValue("User registered, but failed to save profile: ${e.message}")
-                            _registerSuccess.postValue(true) // Still navigate them in!
+                            // Even if saving to Firestore fails, the user is created in Auth
+                            _registerSuccess.postValue(true) 
                         }
                     }
                 },
                 onError = { errorMessage ->
                     _loading.postValue(false)
-                    if (errorMessage.contains("already registered", ignoreCase = true)) {
-                        _emailError.postValue(errorMessage)
+                    if (errorMessage.contains("already registered", ignoreCase = true) || 
+                        errorMessage.contains("already in use", ignoreCase = true)) {
+                        _emailError.postValue("This email address is already registered")
                     } else {
                         _registerError.postValue(errorMessage)
                     }

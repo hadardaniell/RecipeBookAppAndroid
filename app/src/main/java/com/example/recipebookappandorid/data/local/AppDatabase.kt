@@ -21,7 +21,7 @@ import com.example.recipebookappandorid.data.local.entity.UserEntity
         SharedRecipeBookEntity::class,
         SharedBookInviteEntity::class
     ],
-    version = 10,
+    version = 11, // Incremented version to apply schema changes
     exportSchema = false
 )
 @TypeConverters(Converters::class)
