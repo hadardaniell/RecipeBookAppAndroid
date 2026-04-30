@@ -13,7 +13,9 @@ import java.util.UUID
 class StorageRepository(context: Context) {
 
     private val appContext = context.applicationContext
-    private val storage = FirebaseStorage.getInstance("gs://recipebookappandorid.firebasestorage.app")
+    // Removed the hardcoded bucket URL. Using getInstance() with default configuration is safer
+    // and prevents bucket URL mismatch errors.
+    private val storage = FirebaseStorage.getInstance()
 
     suspend fun uploadProfileImage(uri: Uri): String? {
         return uploadImage(uri = uri, folder = "profiles")
