@@ -59,25 +59,25 @@
                             android:tint="@color/ink_500" />
                     </LinearLayout>
 
+                    <!-- Profile Image Container: Changed CardView constraints to fix blue circle issue -->
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/profileAvatarContainer"
-                        android:layout_width="108dp"
-                        android:layout_height="108dp"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="18dp"
                         app:cardBackgroundColor="@color/white"
-                        app:cardCornerRadius="54dp"
+                        app:cardCornerRadius="60dp"
                         app:cardElevation="0dp"
                         app:strokeColor="@color/navy_500"
                         app:strokeWidth="2dp">
 
-                        <com.google.android.material.imageview.ShapeableImageView
+                        <ImageView
                             android:id="@+id/profileImage"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/ic_profile_avatar_placeholder"
-                            app:shapeAppearance="@style/ShapeAppearance.RecipeBook.Pill" />
+                            android:src="@drawable/ic_recipe_placeholder" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <TextView

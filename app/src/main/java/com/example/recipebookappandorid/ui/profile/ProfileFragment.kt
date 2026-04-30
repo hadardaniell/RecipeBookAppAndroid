@@ -79,25 +79,25 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     }
                 binding.tvName.text = user.name.ifBlank { fallbackName }
                 binding.tvUsername.text = user.profileEmailLabel()
-                if (user.profileImageUrl.isBlank()) {
-                    Glide.with(this).clear(binding.profileImage)
-                    binding.profileImage.scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
-                    binding.profileImage.setImageResource(R.drawable.ic_profile_avatar_placeholder)
-                } else {
-                    binding.profileImage.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                
+                // Using standard ImageView inside a CardView, no need for circleCrop if CardView handles radius
+                if (user.profileImageUrl.isNotBlank()) {
                     Glide.with(this)
                         .load(user.profileImageUrl)
-                        .placeholder(R.drawable.ic_profile_avatar_placeholder)
-                        .error(R.drawable.ic_profile_avatar_placeholder)
-                        .circleCrop()
+                        .placeholder(R.drawable.ic_recipe_placeholder)
+                        .error(R.drawable.ic_recipe_placeholder)
+                        .into(binding.profileImage)
+                } else {
+                    Glide.with(this)
+                        .load(R.drawable.ic_recipe_placeholder)
                         .into(binding.profileImage)
                 }
             } else {
                 binding.tvName.text = "Guest"
                 binding.tvUsername.text = "@guest"
-                Glide.with(this).clear(binding.profileImage)
-                binding.profileImage.scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
-                binding.profileImage.setImageResource(R.drawable.ic_profile_avatar_placeholder)
+                Glide.with(this)
+                    .load(R.drawable.ic_recipe_placeholder)
+                    .into(binding.profileImage)
             }
         }
 
