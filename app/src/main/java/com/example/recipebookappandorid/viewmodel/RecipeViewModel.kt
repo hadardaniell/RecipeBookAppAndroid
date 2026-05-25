@@ -186,8 +186,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 displayName = currentUser?.name.orEmpty()
             )
             val sourceRecipeId = recipe.sourceRecipeId.ifBlank { recipe.id }
-            if (recipeRepository.recipeExistsInAnyBook(sourceRecipeId, recipe.title)) {
-                _saveError.postValue("This recipe already appears in one of your books")
+            if (recipeRepository.recipeExistsInBook(privateBook.id, sourceRecipeId, recipe.title)) {
+                _saveError.postValue("This recipe already appears in your recipes")
                 return@launch
             }
             val importedRecipe = recipe.copy(
