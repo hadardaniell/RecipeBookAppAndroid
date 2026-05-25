@@ -69,6 +69,23 @@ class RecipeRepository(context: Context) {
         return candidates.any { it.id != excludeRecipeId }
     }
 
+    suspend fun recipeExistsInBook(
+        bookId: String,
+        sourceRecipeId: String,
+        title: String,
+        excludeRecipeId: String = ""
+    ): Boolean {
+        val candidates = buildList {
+            if (sourceRecipeId.isNotBlank()) {
+                addAll(recipeDao.getRecipesByBookAndSourceRecipeId(bookId, sourceRecipeId))
+            }
+            if (isEmpty()) {
+                addAll(recipeDao.getRecipesByBookAndTitle(bookId, title))
+            }
+        }
+        return candidates.any { it.id != excludeRecipeId }
+    }
+
     suspend fun updateRecipe(recipe: Recipe) {
         recipeDao.updateRecipe(recipe.toEntity())
         recipesCollection.document(recipe.id).set(recipe).await()

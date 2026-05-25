@@ -368,8 +368,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
             _isSaving.postValue(true)
             runCatching {
                 val sourceRecipeId = recipe.sourceRecipeId.ifBlank { recipe.id }
-                if (recipeRepository.recipeExistsInAnyBook(sourceRecipeId, recipe.title)) {
-                    throw IllegalStateException("This recipe already appears in one of your books")
+                if (recipeRepository.recipeExistsInBook(bookId, sourceRecipeId, recipe.title)) {
+                    throw IllegalStateException("This recipe already appears in this book")
                 }
                 val copiedRecipe = recipe.copy(
                     id = UUID.randomUUID().toString(),
