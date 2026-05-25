@@ -38,8 +38,14 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes WHERE sourceRecipeId = :sourceRecipeId")
     suspend fun getRecipesBySourceRecipeId(sourceRecipeId: String): List<RecipeEntity>
 
+    @Query("SELECT * FROM recipes WHERE sharedBookId = :bookId AND sourceRecipeId = :sourceRecipeId")
+    suspend fun getRecipesByBookAndSourceRecipeId(bookId: String, sourceRecipeId: String): List<RecipeEntity>
+
     @Query("SELECT * FROM recipes WHERE title = :title")
     suspend fun getRecipesByTitle(title: String): List<RecipeEntity>
+
+    @Query("SELECT * FROM recipes WHERE sharedBookId = :bookId AND title = :title")
+    suspend fun getRecipesByBookAndTitle(bookId: String, title: String): List<RecipeEntity>
 
     @Query("DELETE FROM recipes WHERE id = :recipeId")
     suspend fun deleteRecipeById(recipeId: String)

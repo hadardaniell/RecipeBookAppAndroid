@@ -161,8 +161,8 @@ class SharedBookDetailsViewModel(application: Application) : AndroidViewModel(ap
             runCatching {
                 val role = book.roleFor(firebaseUser.uid).orEmpty()
                 val sourceRecipeId = recipe.sourceRecipeId.ifBlank { recipe.id }
-                if (recipeRepository.recipeExistsInAnyBook(sourceRecipeId, recipe.title)) {
-                    throw IllegalStateException("This recipe already appears in one of your books")
+                if (recipeRepository.recipeExistsInBook(book.id, sourceRecipeId, recipe.title)) {
+                    throw IllegalStateException("This recipe already appears in this book")
                 }
                 val copiedRecipe = recipe.copy(
                     id = UUID.randomUUID().toString(),
